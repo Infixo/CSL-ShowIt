@@ -4,6 +4,8 @@ using UnityEngine;
 namespace ShowIt
 {
     public class UIUtils
+        // Infixo todo: create slider for showing progress with level tresholds
+        // Infixo todo: create slider for showing value of the immaterial resource effect
     {
         public static UIFont GetUIFont(string name)
         {
@@ -40,6 +42,7 @@ namespace ShowIt
         public static UILabel CreateLabel(UIComponent parent, string name, string text)
         {
             UILabel label = parent.AddUIComponent<UILabel>();
+            label.textAlignment = UIHorizontalAlignment.Center; // Infixo: looks like a default for all labels
             label.name = name;
             label.text = text;
 

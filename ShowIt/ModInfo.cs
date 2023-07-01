@@ -6,8 +6,8 @@ namespace ShowIt
 {
     public class ModInfo : IUserMod
     {
-        public string Name => "Show It!";
-        public string Description => "Shows vital indicators for zoned buildings.";
+        public string Name => "Show It! (Infixo)";
+        public string Description => "Shows vital indicators and progress info for zoned buildings.";
 
         private static readonly string[] IndicatorsPanelAlignmentLabels =
         {

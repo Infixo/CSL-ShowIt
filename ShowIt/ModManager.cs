@@ -4,6 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Experimental.Director;
+using static Citizen;
+using static ColossalFramework.DataBinding.BindPropertyByKey;
 
 namespace ShowIt
 {
@@ -15,9 +18,22 @@ namespace ShowIt
         private UIPanel _makeHistoricalPanel;
         private UICheckBox _indicatorsCheckBox;
         private UIPanel _indicatorsPanel;
+        // leveling progress - wealth, education section
+        private UILabel _progTopName; // education or wealth
+        private UILabel _progTopProgress; // number 1..15
+        private UILabel _progTopValue; // actual value number
+        // Infixo: todo slider showing nicely the progress and tresholds for various levels
+        // leveling progress - land value, service coverage
+        private UILabel _progBotName; // land value or service coverage
+        private UILabel _progBotProgress; // number 1..15
+        private UILabel _progBotValue; // actual value number
+        // Infixo: todo slider showing nicely the progress and tresholds for various levels
+
+        // service coverage
         private UILabel _header;
         private Dictionary<int, UIRadialChart> _charts;
         private Dictionary<int, UILabel> _numbers;
+        private Dictionary<int, UILabel> _maxVals; // Infixo: a set of labels showing max indicator values
         private Dictionary<int, UISprite> _icons;
         private Dictionary<int, UILabel> _labels;
 
@@ -33,6 +49,7 @@ namespace ShowIt
             {
                 _charts = new Dictionary<int, UIRadialChart>();
                 _numbers = new Dictionary<int, UILabel>();
+                _maxVals = new Dictionary<int, UILabel>(); // Infixo
                 _icons = new Dictionary<int, UISprite>();
                 _labels = new Dictionary<int, UILabel>();
 
@@ -95,6 +112,7 @@ namespace ShowIt
                 {
                     Destroy(_charts[i]);
                     Destroy(_numbers[i]);
+                    Destroy(_maxVals[i]); // Infixo
                     Destroy(_icons[i]);
                     Destroy(_labels[i]);
                 }
@@ -110,6 +128,7 @@ namespace ShowIt
                 {
                     Destroy(_indicatorsCheckBox);
                 }
+                // Infixo: todo add Destroy for other labels
             }
             catch (Exception e)
             {
@@ -139,14 +158,27 @@ namespace ShowIt
                     ModConfig.Instance.Save();
                 };
 
-                _header = UIUtils.CreateLabel(_indicatorsPanel, "ShowItIndicatorsPanelHeader", "Indicators");
+                _header = UIUtils.CreateLabel(_indicatorsPanel, "ShowItIndicatorsPanelHeader", "Service coverage");
                 _header.font = UIUtils.GetUIFont("OpenSans-Regular");
-                _header.textAlignment = UIHorizontalAlignment.Center;
+                //_header.textAlignment = UIHorizontalAlignment.Center;
 
-                UIRadialChart chart;
-                UILabel number;
+                // Infixo: new section showing leveling progress
+                // leveling progress - wealth, education section
+                _progTopName     = UIUtils.CreateLabel(_indicatorsPanel, "ShowItPanel_ProgTopName", "Education/Wealth"); // education or wealth
+                _progTopProgress = UIUtils.CreateLabel(_indicatorsPanel, "ShowItPanel_ProgTopProgress", "-1"); // number 1..15
+                _progTopValue    = UIUtils.CreateLabel(_indicatorsPanel, "ShowItPanel_ProgTopValue", "-1"); // actual value number
+                // Infixo: todo slider showing nicely the progress and tresholds for various levels
+                // leveling progress - land value, service coverage
+                _progBotName     = UIUtils.CreateLabel(_indicatorsPanel, "ShowItPanel_ProgBotName", "Land value/Service coverage"); // education or wealth
+                _progBotProgress = UIUtils.CreateLabel(_indicatorsPanel, "ShowItPanel_ProgBotProgress", "-1"); // number 1..15
+                _progBotValue    = UIUtils.CreateLabel(_indicatorsPanel, "ShowItPanel_ProgBotValue", "-1"); // actual value number
+                // Infixo: todo slider showing nicely the progress and tresholds for various levels
+
+                UIRadialChart chart; // Infixo: radial chart -> change into a slider whowing max value
+                UILabel number; // indicator value
+                UILabel maxVal; // indicator max value (a little smaller)
                 UISprite icon;
-                UILabel label;
+                UILabel label; // indicator name
 
                 for (var i = 0; i < MaxNumberOfCharts; i++)
                 {
@@ -166,15 +198,19 @@ namespace ShowIt
                     _charts.Add(i, chart);
 
                     number = UIUtils.CreateLabel(chart, "ShowItIndicatorsPanelNumber" + i, "");
-                    number.textAlignment = UIHorizontalAlignment.Center;
+                    //number.textAlignment = UIHorizontalAlignment.Center;
                     _numbers.Add(i, number);
+
+                    maxVal = UIUtils.CreateLabel(chart, "ShowItIndicatorsPanelNumber" + i, "");
+                    //maxVal.textAlignment = UIHorizontalAlignment.Center;
+                    _maxVals.Add(i, maxVal);
 
                     icon = UIUtils.CreateSprite(chart, "ShowItIndicatorsPanelIcon" + i, "");
                     _icons.Add(i, icon);
 
                     label = UIUtils.CreateLabel(chart, "ShowItIndicatorsPanelLabel" + i, "");
                     label.font = UIUtils.GetUIFont("OpenSans-Regular");
-                    label.textAlignment = UIHorizontalAlignment.Center;
+                    //label.textAlignment = UIHorizontalAlignment.Center;
                     label.textColor = new Color32(206, 248, 0, 255);
                     _labels.Add(i, label);
                 }
@@ -185,15 +221,30 @@ namespace ShowIt
             }
         }
 
+        // Infixo: place UI controls and reorganize UI when config changed
         private void UpdateUI()
         {
             try
             {
+                // Infixo: progress section
+                _header.relativePosition = new Vector3(_indicatorsPanel.width / 2f - _header.width / 2f, _header.height / 2f + 5f);
+                // Infixo: new section showing leveling progress
+                // leveling progress - wealth, education section
+                _progTopName.relativePosition = new Vector3(10, 10);// education or wealth
+                _progTopProgress.relativePosition = new Vector3(200, 10); // number 1..15
+                _progTopValue.relativePosition = new Vector3(230, 10); // actual value number
+                // Infixo: todo slider showing nicely the progress and tresholds for various levels
+                // leveling progress - land value, service coverage
+                _progBotName.relativePosition = new Vector3(10, 40); // land value or service coverage
+                _progBotProgress.relativePosition = new Vector3(200, 40); // number 1..15
+                _progBotValue.relativePosition = new Vector3(230, 40); // actual value number
+                // Infixo: todo slider showing nicely the progress and tresholds for various levels
+
                 int rows;
                 int columns;
                 float horizontalSpacing = ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing;
                 float verticalSpacing = ModConfig.Instance.IndicatorsPanelChartVerticalSpacing;
-                float topSpacing = 40f;
+                float topSpacing = 140f; // Infixo: move all controls 100 down
                 float bottomSpacing = 15f;
                 float horizontalPadding = 0f;
                 float verticalPadding = 0f;
@@ -225,7 +276,7 @@ namespace ShowIt
                     verticalPadding = ModConfig.Instance.IndicatorsPanelChartVerticalSpacing / 2f;
                 }
 
-                _header.relativePosition = new Vector3(_indicatorsPanel.width / 2f - _header.width / 2f, _header.height / 2f + 5f);
+                _header.relativePosition = new Vector3(_indicatorsPanel.width / 2f - _header.width / 2f, _header.height / 2f + 105f); // Infixo: move down by 100
 
                 UIRadialChart chart;
 
@@ -237,6 +288,7 @@ namespace ShowIt
                     chart.relativePosition = new Vector3(horizontalPadding + i % columns * (chart.width + horizontalSpacing), topSpacing + verticalPadding + i / columns * (chart.height + verticalSpacing));
 
                     _numbers[i].textScale = ModConfig.Instance.IndicatorsPanelNumberTextScale;
+                    _maxVals[i].textScale = ModConfig.Instance.IndicatorsPanelNumberTextScale;
                     _icons[i].size = new Vector3(ModConfig.Instance.IndicatorsPanelIconSize, ModConfig.Instance.IndicatorsPanelIconSize);
                     _labels[i].textScale = ModConfig.Instance.IndicatorsPanelLabelTextScale;
                 }
@@ -309,8 +361,12 @@ namespace ShowIt
                 _charts[index].isVisible = true;
 
                 _numbers[index].text = $"{Math.Round(resourceEffectPercentage * 100f),1}%";
-                _numbers[index].relativePosition = new Vector3(_charts[index].width / 2f - _numbers[index].width / 2f, _charts[index].height / 2f - _numbers[index].height / 2f);
+                _numbers[index].relativePosition = new Vector3(_charts[index].width / 2f - _numbers[index].width / 2f, _charts[index].height / 2f - _numbers[index].height / 2f - 10); // Infixo todo: better placing
                 _numbers[index].isVisible = true;
+
+                _maxVals[index].text = "0"; // Infixo todo?
+                _maxVals[index].relativePosition = new Vector3(_charts[index].width / 2f - _numbers[index].width / 2f, _charts[index].height / 2f - _numbers[index].height / 2f + 10);
+                _maxVals[index].isVisible = true;
 
                 _icons[index].spriteName = GetIndicatorSprite(resource);
                 _icons[index].tooltip = GetIndicatorName(resource);
@@ -354,6 +410,11 @@ namespace ShowIt
                 foreach (UILabel number in _numbers.Values)
                 {
                     number.isVisible = false;
+                }
+
+                foreach (UILabel maxVal in _maxVals.Values)
+                {
+                    maxVal.isVisible = false;
                 }
 
                 foreach (UISprite icon in _icons.Values)
@@ -431,16 +492,20 @@ namespace ShowIt
                         case ItemClass.Zone.ResidentialHigh:
                         case ItemClass.Zone.ResidentialLow:
                             ShowResidentialCharts();
+                            ShowResidentialProgress(buildingId, ref building);
                             break;
                         case ItemClass.Zone.Industrial:
                             ShowIndustrialCharts();
+                            ShowIndustrialProgress(buildingId, ref building);
                             break;
                         case ItemClass.Zone.CommercialHigh:
                         case ItemClass.Zone.CommercialLow:
                             ShowCommercialCharts();
+                            ShowCommercialProgress(buildingId, ref building);
                             break;
                         case ItemClass.Zone.Office:
                             ShowOfficeCharts();
+                            ShowOfficeProgress(buildingId, ref building);
                             break;
                         default:
 
@@ -572,6 +637,10 @@ namespace ShowIt
                 resources[14] = ImmaterialResourceManager.Resource.Abandonment;
 
                 SetCharts(resources);
+
+                // Infixo new calculations
+
+
             }
             catch (Exception e)
             {
@@ -946,5 +1015,329 @@ namespace ShowIt
                     break;
             }
         }
+
+
+        // This is an exact copy of CommonBuildingAI.GetHomeBehaviour to get info about wealth of the customers and number of visitors
+        // This is a protected member and this data is not stored in Building object once used by the BuildingAI
+        protected void GetHomeBehaviour(ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, ref int aliveCount, ref int totalCount, ref int homeCount, ref int aliveHomeCount, ref int emptyHomeCount)
+        {
+            CitizenManager instance = Singleton<CitizenManager>.instance;
+            uint num = buildingData.m_citizenUnits;
+            int num2 = 0;
+            while (num != 0)
+            {
+                if ((instance.m_units.m_buffer[num].m_flags & CitizenUnit.Flags.Home) != 0)
+                {
+                    int aliveCount2 = 0;
+                    int totalCount2 = 0;
+                    instance.m_units.m_buffer[num].GetCitizenHomeBehaviour(ref behaviour, ref aliveCount2, ref totalCount2);
+                    if (aliveCount2 != 0)
+                    {
+                        aliveHomeCount++;
+                        aliveCount += aliveCount2;
+                    }
+                    if (totalCount2 != 0)
+                    {
+                        totalCount += totalCount2;
+                    }
+                    else
+                    {
+                        emptyHomeCount++;
+                    }
+                    homeCount++;
+                }
+                num = instance.m_units.m_buffer[num].m_nextUnit;
+                if (++num2 > 524288)
+                {
+                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                    break;
+                }
+            }
+        }
+
+
+        // The code is based on ResidentialBuildingAI.CheckBuildingLevel
+        private void ShowResidentialProgress(ushort buildingId, ref Building building)
+        {
+            // extract progress info, reverse:
+            // buildingData.m_levelUpProgress = (byte)(educationProgress | (landValueProgress << 4));
+            int progressTop = building.m_levelUpProgress & 0xF; // ui-top is education
+            int progressBot = building.m_levelUpProgress >> 4;  // ui-bottom is land value
+
+            // education level needs to be re-calculated
+
+            Citizen.BehaviourData behaviour = default;
+            int aliveCount = 0;
+            int totalCount = 0;
+            int homeCount = 0;
+            int aliveHomeCount = 0;
+            int emptyHomeCount = 0;
+            GetHomeBehaviour(buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount, ref homeCount, ref aliveHomeCount, ref emptyHomeCount);
+
+            // Citizen.BehaviourData is not accessible, so we must use Building data
+            int education = behaviour.m_educated1Count + behaviour.m_educated2Count * 2 + behaviour.m_educated3Count * 3;
+            int populace = behaviour.m_teenCount + behaviour.m_youngCount * 2 + behaviour.m_adultCount * 3 + behaviour.m_seniorCount * 3;
+            if (populace != 0)
+            {
+                education = (education * 72 + (populace >> 1)) / populace;
+            }
+
+            // land value
+            Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(ImmaterialResourceManager.Resource.LandValue, building.m_position, out var local);
+
+            // show it!
+            _progTopName.text = "Education";
+            _progTopName.tooltip = "[Level 1]  ..14 | 15..29 | 30..44 | 45..59 | 60..  [Level 5]" + Environment.NewLine + // Infixo todo: change to slider
+                $"Populace: Children {building.m_children} Teens {building.m_teens} Youngs {building.m_youngs} Adults {building.m_adults} Seniors {building.m_seniors}" + Environment.NewLine +
+                $"Education: Low {building.m_education1} Medium {building.m_education2} High {building.m_education3}";
+            _progTopProgress.text = progressTop.ToString();
+            _progTopValue.text = education.ToString();
+            _progBotName.text = "Land value";
+            _progBotName.tooltip = "[Level 1]   ..5 |  6..20 | 21..40 | 41..60 | 61..  [Level 5]"; // Infixo todo: change to slider
+            _progBotProgress.text = progressBot.ToString();
+            _progBotValue.text = local.ToString();
+        }
+
+        // This is an exact copy of IndustrialBuildingAI.CalculateServiceValue private method to get info about service coverage
+        private int CalculateServiceValueIndustrial(ushort buildingID, ref Building data)
+        {
+            Singleton<ImmaterialResourceManager>.instance.CheckLocalResources(data.m_position, out var resources, out var index);
+            int resourceRate = resources[index + 7];
+            int resourceRate2 = resources[index + 2];
+            int resourceRate3 = resources[index];
+            int resourceRate4 = resources[index + 6];
+            int resourceRate5 = resources[index + 25];
+            int resourceRate6 = resources[index + 1];
+            int resourceRate7 = resources[index + 13];
+            int resourceRate8 = resources[index + 3];
+            int resourceRate9 = resources[index + 4];
+            int resourceRate10 = resources[index + 5];
+            int resourceRate11 = resources[index + 19];
+            int resourceRate12 = resources[index + 8];
+            int resourceRate13 = resources[index + 18];
+            int resourceRate14 = resources[index + 20];
+            int resourceRate15 = resources[index + 21];
+            int resourceRate16 = resources[index + 23];
+            int num = 0;
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate, 100, 500, 50, 100) / 3;
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate2, 100, 500, 50, 100) / 5;
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate3, 100, 500, 50, 100) / 5;
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate4, 100, 500, 50, 100) / 5;
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate5, 100, 500, 50, 100) / 5;
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate6, 100, 500, 50, 100) / 2;
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate7, 100, 500, 50, 100) / 8;
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate8, 100, 500, 50, 100) / 8;
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate9, 100, 500, 50, 100) / 8;
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate10, 100, 500, 50, 100) / 8;
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate11, 100, 500, 50, 100);
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate14, 50, 100, 80, 100) / 5;
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate15, 100, 1000, 0, 100) / 5;
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate16, 50, 100, 80, 100) / 5;
+            num -= ImmaterialResourceManager.CalculateResourceEffect(resourceRate12, 100, 500, 50, 100) / 7;
+            num -= ImmaterialResourceManager.CalculateResourceEffect(resourceRate13, 100, 500, 50, 100) / 7;
+            Singleton<NaturalResourceManager>.instance.CheckPollution(data.m_position, out var groundPollution);
+            return num - ImmaterialResourceManager.CalculateResourceEffect(groundPollution, 50, 255, 50, 100) / 6;
+        }
+
+        private void ShowIndustrialProgress(ushort buildingId, ref Building building) // Infixo todo: Almost the same as Office but the factor is different, could be a param
+        {
+            // extract progress info, reverse:
+            // buildingData.m_levelUpProgress = (byte)(educationProgress | (serviceProgress << 4));
+            int progressTop = building.m_levelUpProgress & 0xF; // ui-top is education
+            int progressBot = building.m_levelUpProgress >> 4;  // ui-bottom is service coverage
+
+            // wealth level needs to be re-calculated; we need data about visitors for that
+            Citizen.BehaviourData behaviour = default;
+            int aliveWorkerCount = 0;
+            int totalWorkerCount = 0;
+            GetWorkBehaviour(buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
+            int education = behaviour.m_educated1Count + behaviour.m_educated2Count * 2 + behaviour.m_educated3Count * 3;
+            if (aliveWorkerCount != 0)
+            {
+                education = (education * 20 + (aliveWorkerCount >> 1)) / aliveWorkerCount; // Infixo todo: it is 12 in Office
+            }
+
+            // service coverage
+            int service = CalculateServiceValueIndustrial(buildingId, ref building);
+
+            // show it!
+            _progTopName.text = "Education of workers";
+            _progTopName.tooltip = "[Level 1]  ..14 | 15..29 | 30..  [Level 3]" + Environment.NewLine + // Infixo todo: change to slider
+                $"Workers: {aliveWorkerCount}, Education: Low {behaviour.m_educated1Count} Medium {behaviour.m_educated2Count} High {behaviour.m_educated3Count}";
+            _progTopProgress.text = progressTop.ToString();
+            _progTopValue.text = education.ToString();
+            _progBotName.text = "Service Coverage";
+            _progBotName.tooltip = "[Level 1]  ..29 | 30..59 | 60..  [Level 3]"; // Infixo todo: change to slider
+            _progBotProgress.text = progressBot.ToString();
+            _progBotValue.text = service.ToString();
+        }
+
+        // This is an exact copy of CommonBuildingAI.GetVisitBehaviour to get info about wealth of the customers and number of visitors
+        // This is a protected member and this data is not stored in Building object once used by the BuildingAI
+        private void GetVisitBehaviour(ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, ref int aliveCount, ref int totalCount)
+        {
+            CitizenManager instance = Singleton<CitizenManager>.instance;
+            uint num = buildingData.m_citizenUnits;
+            int num2 = 0;
+            while (num != 0)
+            {
+                if ((instance.m_units.m_buffer[num].m_flags & CitizenUnit.Flags.Visit) != 0)
+                {
+                    instance.m_units.m_buffer[num].GetCitizenVisitBehaviour(ref behaviour, ref aliveCount, ref totalCount);
+                }
+                num = instance.m_units.m_buffer[num].m_nextUnit;
+                if (++num2 > 524288)
+                {
+                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                    break;
+                }
+            }
+        }
+
+        // The code is based on CommercialBuildingAI.CheckBuildingLevel
+        private void ShowCommercialProgress(ushort buildingId, ref Building building)
+        {
+            // extract progress info, reverse:
+            // buildingData.m_levelUpProgress = (byte)(wealthProgress | (landValueProgress << 4));
+            int progressTop = building.m_levelUpProgress & 0xF; // ui-top is wealth
+            int progressBot = building.m_levelUpProgress >> 4;  // ui-bottom is land value
+
+            // wealth level needs to be re-calculated; we need data about visitors for that
+            Citizen.BehaviourData behaviour = default(Citizen.BehaviourData);
+            int aliveCount = 0;
+            int totalCount = 0;
+            GetVisitBehaviour(buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount); // aliveCount == visitorCount
+            int wealth = behaviour.m_wealth1Count + behaviour.m_wealth2Count * 2 + behaviour.m_wealth3Count * 3;
+            if (aliveCount != 0)
+            {
+                wealth = (wealth * 18 + (aliveCount >> 1)) / aliveCount;
+            }
+
+            // land value
+            Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(ImmaterialResourceManager.Resource.LandValue, building.m_position, out var local);
+
+            // show it!
+            _progTopName.text = "Wealth";
+            _progTopName.tooltip = "[Level 1]  ..29 | 30..44 | 45..  [Level 3]" + Environment.NewLine + // Infixo todo: change to slider
+                $"Visitors: {aliveCount}, Wealth: Low {behaviour.m_wealth1Count} Medium {behaviour.m_wealth2Count} High {behaviour.m_wealth3Count}";
+            _progTopProgress.text = progressTop.ToString();
+            _progTopValue.text = wealth.ToString();
+            _progBotName.text = "Land value";
+            _progBotName.tooltip = "[Level 1]  ..20 | 21..40 | 41..  [Level 3]"; // Infixo todo: change to slider
+            _progBotProgress.text = progressBot.ToString();
+            _progBotValue.text = local.ToString();
+        }
+
+        // This is an exact copy of CommonBuildingAI.GetWorkBehaviour to get info about education of the workers and number of workers
+        // This is a protected member and this data is not stored in Building object once used by the BuildingAI
+        protected void GetWorkBehaviour(ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, ref int aliveCount, ref int totalCount)
+        {
+            CitizenManager instance = Singleton<CitizenManager>.instance;
+            uint num = buildingData.m_citizenUnits;
+            int num2 = 0;
+            while (num != 0)
+            {
+                if ((instance.m_units.m_buffer[num].m_flags & CitizenUnit.Flags.Work) != 0)
+                {
+                    instance.m_units.m_buffer[num].GetCitizenWorkBehaviour(ref behaviour, ref aliveCount, ref totalCount);
+                }
+                num = instance.m_units.m_buffer[num].m_nextUnit;
+                if (++num2 > 524288)
+                {
+                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                    break;
+                }
+            }
+        }
+
+        private int CalculateAndShowSingleServiceValue(
+            int resourceRate, int middleRate, int maxRate, int middleEffect, int maxEffect, // params for CalculateResourceEffect
+            int divisor, int uiCtrl) // uiCtrl is a dict-key to access proper controls
+        {
+            int value = ImmaterialResourceManager.CalculateResourceEffect(resourceRate, middleRate, maxRate, middleEffect, maxEffect) / divisor;
+            int maxValue = maxEffect / divisor;
+            _numbers[uiCtrl].text = value.ToString();
+            _maxVals[uiCtrl].text = maxValue.ToString();
+            return value;
+        }
+
+        // This is an exact copy of OfficeBuildingAI.CalculateServiceValue private method to get info about service coverage
+        // Calls to CalculateResourceEffect are converted to CalculateAndShowSingleServiceValue with exactly the same params
+        private int CalculateServiceValueOffice(ushort buildingID, ref Building data)
+        {
+            Singleton<ImmaterialResourceManager>.instance.CheckLocalResources(data.m_position, out var resources, out var index);
+            int resourceRate = resources[index + 7]; // PublicTransport
+            int resourceRate2 = resources[index + 2]; // PoliceDepartment
+            int resourceRate3 = resources[index]; // HealthCare
+            int resourceRate4 = resources[index + 6]; // DeathCare
+            int resourceRate5 = resources[index + 25]; // PostService
+            int resourceRate6 = resources[index + 1]; // FireDepartment
+            int resourceRate7 = resources[index + 13]; // Entertainment
+            int resourceRate8 = resources[index + 3]; // EducationElementary
+            int resourceRate9 = resources[index + 4]; // EducationHighSchool
+            int resourceRate10 = resources[index + 5]; // EducationUniversity
+            int resourceRate11 = resources[index + 8]; // NoisePollution
+            int resourceRate12 = resources[index + 18]; // Abandonment
+            int resourceRate13 = resources[index + 20]; // RadioCoverage
+            int resourceRate14 = resources[index + 21]; // FirewatchCoverage
+            int resourceRate15 = resources[index + 23]; // DisasterCoverage
+            int num = 0;
+            num += CalculateAndShowSingleServiceValue(resourceRate, 100, 500, 50, 100, 3, 7); // PublicTransport
+            num += CalculateAndShowSingleServiceValue(resourceRate2, 100, 500, 50, 100, 5, 3); // PoliceDepartment
+            num += CalculateAndShowSingleServiceValue(resourceRate3, 100, 500, 50, 100, 5, 0); // HealthCare
+            num += CalculateAndShowSingleServiceValue(resourceRate4, 100, 500, 50, 100, 5, 1); // DeathCare
+            num += CalculateAndShowSingleServiceValue(resourceRate5, 100, 500, 50, 100, 5, 8); // PostService
+            num += CalculateAndShowSingleServiceValue(resourceRate6, 100, 500, 50, 100, 5, 2); // FireDepartment
+            num += CalculateAndShowSingleServiceValue(resourceRate7, 100, 500, 50, 100, 6, 9); // Entertainment
+            num += CalculateAndShowSingleServiceValue(resourceRate8, 100, 500, 50, 100, 7, 4); // EducationElementary
+            num += CalculateAndShowSingleServiceValue(resourceRate9, 100, 500, 50, 100, 7, 5); // EducationHighSchool
+            num += CalculateAndShowSingleServiceValue(resourceRate10, 100, 500, 50, 100, 7, 6); // EducationUniversity
+            //num += CalculateAndShowSingleServiceValue(resourceRate13, 50, 100, 80, 100, 5, 12); // RadioCoverage // I dont have this DLC
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate13, 50, 100, 80, 100) / 5;
+            num += CalculateAndShowSingleServiceValue(resourceRate14, 100, 1000, 0, 100, 5, 10); // FirewatchCoverage
+            //num += CalculateAndShowSingleServiceValue(resourceRate15, 50, 100, 80, 100, 5, 11); // DisasterCoverage // I dont have this DLC
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate15, 50, 100, 80, 100) / 5;
+            // negatives
+            num -= CalculateAndShowSingleServiceValue(resourceRate11, 100, 500, 50, 100, 4, 11); // NoisePollution
+            //num -= CalculateAndShowSingleServiceValue(resourceRate12, 100, 500, 50, 100, 3, 14); // Abandonment // There is no UI overlay for that
+            num -= ImmaterialResourceManager.CalculateResourceEffect(resourceRate12, 100, 500, 50, 100) / 3;
+            Singleton<NaturalResourceManager>.instance.CheckPollution(data.m_position, out var groundPollution);
+            //return num - CalculateAndShowSingleServiceValue(groundPollution, 50, 255, 50, 100, 4; // Infixo todo: missing, there is no resource effect for that
+            return num - ImmaterialResourceManager.CalculateResourceEffect(groundPollution, 50, 255, 50, 100) / 4;
+        }
+
+        private void ShowOfficeProgress(ushort buildingId, ref Building building)
+        {
+            // extract progress info, reverse:
+            // buildingData.m_levelUpProgress = (byte)(educationProgress | (serviceProgress << 4));
+            int progressTop = building.m_levelUpProgress & 0xF; // ui-top is education
+            int progressBot = building.m_levelUpProgress >> 4;  // ui-bottom is service coverage
+
+            // wealth level needs to be re-calculated; we need data about visitors for that
+            Citizen.BehaviourData behaviour = default;
+            int aliveWorkerCount = 0;
+            int totalWorkerCount = 0;
+            GetWorkBehaviour(buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
+            int education = behaviour.m_educated1Count + behaviour.m_educated2Count * 2 + behaviour.m_educated3Count * 3;
+            if (aliveWorkerCount != 0)
+            {
+                education = (education * 12 + (aliveWorkerCount >> 1)) / aliveWorkerCount;
+            }
+
+            // service coverage
+            int service = CalculateServiceValueOffice(buildingId, ref building);
+
+            // show it!
+            _progTopName.text = "Education of Workers";
+            _progTopName.tooltip = "[Level 1]  ..14 | 15..29 | 30..  [Level 3]" + Environment.NewLine + // Infixo todo: change to slider
+                $"Workers: {aliveWorkerCount}, Education: Low {behaviour.m_educated1Count} Medium {behaviour.m_educated2Count} High {behaviour.m_educated3Count}";
+            _progTopProgress.text = progressTop.ToString();
+            _progTopValue.text = education.ToString();
+            _progBotName.text = "Service Coverage";
+            _progBotName.tooltip = "[Level 1]  ..44 | 45..89 | 90..  [Level 3]"; // Infixo todo: change to slider
+            _progBotProgress.text = progressBot.ToString();
+            _progBotValue.text = service.ToString();
+        }
+
     }
 }
