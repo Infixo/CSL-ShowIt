@@ -7,11 +7,18 @@ using UnityEngine;
 using UnityEngine.Experimental.Director;
 using static Citizen;
 using static ColossalFramework.DataBinding.BindPropertyByKey;
+using static System.Net.Mime.MediaTypeNames;
+
+// Alias the Enum: You can create an alias for an existing enum by using the using directive. 
+using ImmaterialResource = ImmaterialResourceManager.Resource;
 
 namespace ShowIt
 {
+
     public class ModManager : MonoBehaviour
     {
+        public const ImmaterialResourceManager.Resource GroundPollution = (ImmaterialResourceManager.Resource)254; // Ground Pollution does not exists in IRM but it is used to calculate service coverage value
+
         private bool _initialized;
 
         private ZonedBuildingWorldInfoPanel _zonedBuildingWorldInfoPanel;
@@ -36,6 +43,7 @@ namespace ShowIt
         private Dictionary<int, UILabel> _maxVals; // Infixo: a set of labels showing max indicator values
         private Dictionary<int, UISprite> _icons;
         private Dictionary<int, UILabel> _labels;
+        private Dictionary<ImmaterialResourceManager.Resource, UIServiceBar> m_uiServices;
 
         private ushort _cachedBuildingID;
         private Dictionary<int, float> _effectsOnZonedBuilding;
@@ -49,9 +57,10 @@ namespace ShowIt
             {
                 _charts = new Dictionary<int, UIRadialChart>();
                 _numbers = new Dictionary<int, UILabel>();
-                _maxVals = new Dictionary<int, UILabel>(); // Infixo
+                _maxVals = new Dictionary<int, UILabel>();
                 _icons = new Dictionary<int, UISprite>();
                 _labels = new Dictionary<int, UILabel>();
+                m_uiServices = new Dictionary<ImmaterialResourceManager.Resource, UIServiceBar>();
 
                 _effectsOnZonedBuilding = new Dictionary<int, float>();
                 _maxEffectsOnZonedBuilding = new Dictionary<int, float>();
@@ -128,12 +137,27 @@ namespace ShowIt
                 {
                     Destroy(_indicatorsCheckBox);
                 }
-                // Infixo: todo add Destroy for other labels
+                // Infixo todo: add Destroy for other labels
+                // Infixo todo: destroy service bars
             }
             catch (Exception e)
             {
                 Debug.Log("[Show It!] ModManager:OnDestroy -> Exception: " + e.Message);
             }
+        }
+
+        private void CreateUIServiceBar(UIComponent parent, int position, ImmaterialResourceManager.Resource resource)
+        {
+            UIServiceBar uiServiceBar = new UIServiceBar(parent, "ShowIt" + resource.ToString() + "ServiceBar");
+            //parent.AttachUIComponent(uiServiceBar);
+            //BudgetItem budgetItem = uIComponent.GetComponent<BudgetItem>();
+            //UIServiceBar uiServiceBar = parent.GetComponent<UIServiceBar>();
+            uiServiceBar.Width = 400f;
+            uiServiceBar.RelativePosition = new Vector3(10f, 300f + position * (UIServiceBar.DEFAULT_HEIGHT + 2f)); // Infixo todo: scaling
+            uiServiceBar.Text = GetIndicatorName(resource);
+            uiServiceBar.Limit = 100f;
+            uiServiceBar.MaxValue = 8f;
+            m_uiServices.Add(resource, uiServiceBar);
         }
 
         private void CreateUI()
@@ -214,6 +238,34 @@ namespace ShowIt
                     label.textColor = new Color32(206, 248, 0, 255);
                     _labels.Add(i, label);
                 }
+
+                // service bars
+                // UIComponent tree
+                // ShowItIndicatorsPanel (UIPanel)-> attached via AddComponent<>
+                // ...singular controls
+                // ...ShowItZonedIndicatorsPanelChart (UIRadialChart)-> attached via AddComponent<>
+                // ......ShowItIndicatorsPanelNumber
+                // ......ShowItIndicatorsPanelIcon (UISprite) -> attached via AddComponent<>
+                // ...ShowItXXXServiceBar (UIPanel)
+                // ......sub-controls
+                CreateUIServiceBar(_indicatorsPanel,  0, ImmaterialResourceManager.Resource.HealthCare);
+                CreateUIServiceBar(_indicatorsPanel,  1, ImmaterialResourceManager.Resource.FireDepartment);
+                CreateUIServiceBar(_indicatorsPanel,  2, ImmaterialResourceManager.Resource.PoliceDepartment);
+                CreateUIServiceBar(_indicatorsPanel,  3, ImmaterialResourceManager.Resource.EducationElementary);
+                CreateUIServiceBar(_indicatorsPanel,  4, ImmaterialResourceManager.Resource.EducationHighSchool);
+                CreateUIServiceBar(_indicatorsPanel,  5, ImmaterialResourceManager.Resource.EducationUniversity);
+                CreateUIServiceBar(_indicatorsPanel,  6, ImmaterialResourceManager.Resource.DeathCare);
+                CreateUIServiceBar(_indicatorsPanel,  7, ImmaterialResourceManager.Resource.PublicTransport);
+                CreateUIServiceBar(_indicatorsPanel,  8, ImmaterialResourceManager.Resource.Entertainment);
+                CreateUIServiceBar(_indicatorsPanel,  9, ImmaterialResourceManager.Resource.CargoTransport);
+                CreateUIServiceBar(_indicatorsPanel, 10, ImmaterialResourceManager.Resource.RadioCoverage);
+                CreateUIServiceBar(_indicatorsPanel, 11, ImmaterialResourceManager.Resource.FirewatchCoverage);
+                CreateUIServiceBar(_indicatorsPanel, 12, ImmaterialResourceManager.Resource.DisasterCoverage);
+                CreateUIServiceBar(_indicatorsPanel, 13, ImmaterialResourceManager.Resource.PostService);
+                // negatives
+                CreateUIServiceBar(_indicatorsPanel, 14, ImmaterialResourceManager.Resource.NoisePollution);
+                CreateUIServiceBar(_indicatorsPanel, 15, ImmaterialResourceManager.Resource.Abandonment);
+                CreateUIServiceBar(_indicatorsPanel, 16, GroundPollution);
             }
             catch (Exception e)
             {
@@ -275,6 +327,8 @@ namespace ShowIt
                     horizontalPadding = (_indicatorsPanel.parent.width - columns * (ModConfig.Instance.IndicatorsPanelChartSize + ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing)) / 2f;
                     verticalPadding = ModConfig.Instance.IndicatorsPanelChartVerticalSpacing / 2f;
                 }
+                // Infixo todo: FIX change later!!!!
+                _indicatorsPanel.height = _indicatorsPanel.height + 25f * 17;
 
                 _header.relativePosition = new Vector3(_indicatorsPanel.width / 2f - _header.width / 2f, _header.height / 2f + 105f); // Infixo: move down by 100
 
@@ -794,6 +848,8 @@ namespace ShowIt
                     return "Cash Collecting";
                 case ImmaterialResourceManager.Resource.TaxBonus:
                     return "Tax Bonus";
+                case GroundPollution:
+                    return "Ground Pollution";
                 case ImmaterialResourceManager.Resource.None:
                     return "None";
                 default:
@@ -867,6 +923,8 @@ namespace ShowIt
                     return "InfoIconFinancial";
                 case ImmaterialResourceManager.Resource.TaxBonus:
                     return "InfoIconFinancial";
+                case GroundPollution:
+                    return "InfoIconGroundPollution"; // Infixo todo: does it exist?
                 case ImmaterialResourceManager.Resource.None:
                     return "ToolbarIconHelp";
                 default:
@@ -1098,45 +1156,113 @@ namespace ShowIt
             _progBotValue.text = local.ToString();
         }
 
+        private int CalculateAndShowSingleServiceValue(
+            int resourceRate, int middleRate, int maxRate, int middleEffect, int maxEffect, // params for CalculateResourceEffect
+            int divisor, int uiCtrl) // uiCtrl is a dict-key to access proper controls
+        {
+            int value = ImmaterialResourceManager.CalculateResourceEffect(resourceRate, middleRate, maxRate, middleEffect, maxEffect) / divisor;
+            int maxValue = maxEffect / divisor;
+            _numbers[uiCtrl].text = value.ToString();
+            _maxVals[uiCtrl].text = maxValue.ToString();
+            return value;
+        }
+        /// <summary>
+        /// Calculates a service value and shows it in a dedicated UIServiceBar
+        /// </summary>
+        /// <param name="resources"></param>
+        /// <param name="resourceRate"></param>
+        /// <param name="middleRate"></param>
+        /// <param name="maxRate"></param>
+        /// <param name="middleEffect"></param>
+        /// <param name="maxEffect"></param>
+        /// <param name="divisor"></param>
+        /// <param name="uiCtrl"></param>
+        /// <returns></returns>
+        private int ProcessServiceValue(
+            ushort[] resources, int index, // from CheckLocalResources
+            ImmaterialResourceManager.Resource resourceType, // resource type
+            //int resourceRate, // not needed - taken from resources
+            int middleRate, int maxRate, int middleEffect, int maxEffect, // params for CalculateResourceEffect
+            int divisor, int groundPollutionRate = 0)
+        {
+            int resourceRate = ( resourceType == GroundPollution ? groundPollutionRate : resources[index + (int)resourceType] );
+            int value = ImmaterialResourceManager.CalculateResourceEffect(resourceRate, middleRate, maxRate, middleEffect, maxEffect) / divisor;
+            int maxValue = maxEffect / divisor;
+            UIServiceBar uiBar = m_uiServices[resourceType];
+            uiBar.MaxValue = maxValue;
+            uiBar.Value = value;
+            uiBar.BelowMid = (resourceRate < middleRate); // must be after Value, otherwise will be overwritten
+            Debug.Log($"ShowIt.ProcessServiceValue: res={resourceType.ToString()} rate={resourceRate} midMax={middleRate}->{maxRate} effect={middleEffect}->{maxEffect}) div={divisor} value={value}->{maxValue} below? {resourceRate < middleRate}");
+            return value;
+        }
+
         // This is an exact copy of IndustrialBuildingAI.CalculateServiceValue private method to get info about service coverage
         private int CalculateServiceValueIndustrial(ushort buildingID, ref Building data)
         {
-            Singleton<ImmaterialResourceManager>.instance.CheckLocalResources(data.m_position, out var resources, out var index);
-            int resourceRate = resources[index + 7];
-            int resourceRate2 = resources[index + 2];
-            int resourceRate3 = resources[index];
-            int resourceRate4 = resources[index + 6];
-            int resourceRate5 = resources[index + 25];
-            int resourceRate6 = resources[index + 1];
-            int resourceRate7 = resources[index + 13];
-            int resourceRate8 = resources[index + 3];
-            int resourceRate9 = resources[index + 4];
-            int resourceRate10 = resources[index + 5];
-            int resourceRate11 = resources[index + 19];
-            int resourceRate12 = resources[index + 8];
-            int resourceRate13 = resources[index + 18];
-            int resourceRate14 = resources[index + 20];
-            int resourceRate15 = resources[index + 21];
-            int resourceRate16 = resources[index + 23];
-            int num = 0;
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate, 100, 500, 50, 100) / 3;
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate2, 100, 500, 50, 100) / 5;
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate3, 100, 500, 50, 100) / 5;
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate4, 100, 500, 50, 100) / 5;
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate5, 100, 500, 50, 100) / 5;
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate6, 100, 500, 50, 100) / 2;
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate7, 100, 500, 50, 100) / 8;
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate8, 100, 500, 50, 100) / 8;
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate9, 100, 500, 50, 100) / 8;
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate10, 100, 500, 50, 100) / 8;
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate11, 100, 500, 50, 100);
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate14, 50, 100, 80, 100) / 5;
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate15, 100, 1000, 0, 100) / 5;
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate16, 50, 100, 80, 100) / 5;
-            num -= ImmaterialResourceManager.CalculateResourceEffect(resourceRate12, 100, 500, 50, 100) / 7;
-            num -= ImmaterialResourceManager.CalculateResourceEffect(resourceRate13, 100, 500, 50, 100) / 7;
+            Singleton<ImmaterialResourceManager>.instance.CheckLocalResources(data.m_position, out ushort[] resources, out var index);
             Singleton<NaturalResourceManager>.instance.CheckPollution(data.m_position, out var groundPollution);
-            return num - ImmaterialResourceManager.CalculateResourceEffect(groundPollution, 50, 255, 50, 100) / 6;
+
+            // new calculations
+            int value = 0;
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.PublicTransport, 100, 500, 50, 100, 3);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.PoliceDepartment, 100, 500, 50, 100, 5); 
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.HealthCare, 100, 500, 50, 100, 5);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.DeathCare, 100, 500, 50, 100, 5);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.PostService, 100, 500, 50, 100, 5);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.FireDepartment, 100, 500, 50, 100, 2);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.Entertainment, 100, 500, 50, 100, 8);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.EducationElementary, 100, 500, 50, 100, 8);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.EducationHighSchool, 100, 500, 50, 100, 8);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.EducationUniversity, 100, 500, 50, 100, 8);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.CargoTransport, 100, 500, 50, 100, 1);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.RadioCoverage, 50, 100, 80, 100, 5); // I dont have this DLC
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.FirewatchCoverage, 100, 1000, 0, 100, 5);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.DisasterCoverage, 50, 100, 80, 100, 5); // I dont have this DLC
+            // negatives
+            value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.NoisePollution, 100, 500, 50, 100, 7);
+            value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.Abandonment, 100, 500, 50, 100, 7); // There is no UI overlay for that
+            value -= ProcessServiceValue(resources, index, GroundPollution, 50, 255, 50, 100, 6, groundPollution); // special case
+
+            // original calculations
+            int resourceRate = resources[index + 7]; // PublicTransport 7
+            int resourceRate2 = resources[index + 2]; // PoliceDepartment 3
+            int resourceRate3 = resources[index]; // HealthCare 0
+            int resourceRate4 = resources[index + 6]; // DeathCare 1
+            int resourceRate5 = resources[index + 25]; // PostService 8
+            int resourceRate6 = resources[index + 1]; // FireDepartment 2
+            int resourceRate7 = resources[index + 13]; // Entertainment 9
+            int resourceRate8 = resources[index + 3]; // EducationElementary 4
+            int resourceRate9 = resources[index + 4]; // EducationHighSchool 5
+            int resourceRate10 = resources[index + 5]; // EducationUniversity 6
+            int resourceRate11 = resources[index + 19]; // CargoTransport 11
+            int resourceRate12 = resources[index + 8]; // NoisePollution 12
+            int resourceRate13 = resources[index + 18]; // Abandonment --
+            int resourceRate14 = resources[index + 20]; // RadioCoverage --
+            int resourceRate15 = resources[index + 21]; // FirewatchCoverage 10
+            int resourceRate16 = resources[index + 23]; // DisasterCoverage --
+            int num = 0;
+            num += CalculateAndShowSingleServiceValue(resourceRate,  100, 500, 50, 100, 3, 7); // PublicTransport
+            num += CalculateAndShowSingleServiceValue(resourceRate2, 100, 500, 50, 100, 5, 3); // PoliceDepartment
+            num += CalculateAndShowSingleServiceValue(resourceRate3, 100, 500, 50, 100, 5, 0); // HealthCare
+            num += CalculateAndShowSingleServiceValue(resourceRate4, 100, 500, 50, 100, 5, 1); // DeathCare
+            num += CalculateAndShowSingleServiceValue(resourceRate5, 100, 500, 50, 100, 5, 8); // PostService
+            num += CalculateAndShowSingleServiceValue(resourceRate6, 100, 500, 50, 100, 2, 2); // FireDepartment
+            num += CalculateAndShowSingleServiceValue(resourceRate7, 100, 500, 50, 100, 8, 9); // Entertainment
+            num += CalculateAndShowSingleServiceValue(resourceRate8, 100, 500, 50, 100, 8, 4); // EducationElementary
+            num += CalculateAndShowSingleServiceValue(resourceRate9, 100, 500, 50, 100, 8, 5); // EducationHighSchool
+            num += CalculateAndShowSingleServiceValue(resourceRate10, 100, 500, 50, 100, 8, 6); // EducationUniversity
+            num += CalculateAndShowSingleServiceValue(resourceRate11, 100, 500, 50, 100, 1, 11); // CargoTransport
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate14, 50, 100, 80, 100) / 5; // RadioCoverage // I dont have this DLC
+            num += CalculateAndShowSingleServiceValue(resourceRate15, 100, 1000, 0, 100, 5, 10); // FirewatchCoverage
+            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate16, 50, 100, 80, 100) / 5; // DisasterCoverage // I dont have this DLC
+            num -= CalculateAndShowSingleServiceValue(resourceRate12, 100, 500, 50, 100, 7, 12); // NoisePollution
+            num -= ImmaterialResourceManager.CalculateResourceEffect(resourceRate13, 100, 500, 50, 100) / 7; // Abandonment // There is no UI overlay for that
+            num -= ImmaterialResourceManager.CalculateResourceEffect(groundPollution, 50, 255, 50, 100) / 6; // Infixo todo: missing, there is no resource effect for that
+
+            // debug check
+            Debug.Log($"ShowIt.CalculateServiceValueIndustrial, buildingID={buildingID}, original={num}, new={value}, same? {value==num}");
+
+            return num;
         }
 
         private void ShowIndustrialProgress(ushort buildingId, ref Building building) // Infixo todo: Almost the same as Office but the factor is different, could be a param
@@ -1250,19 +1376,9 @@ namespace ShowIt
             }
         }
 
-        private int CalculateAndShowSingleServiceValue(
-            int resourceRate, int middleRate, int maxRate, int middleEffect, int maxEffect, // params for CalculateResourceEffect
-            int divisor, int uiCtrl) // uiCtrl is a dict-key to access proper controls
-        {
-            int value = ImmaterialResourceManager.CalculateResourceEffect(resourceRate, middleRate, maxRate, middleEffect, maxEffect) / divisor;
-            int maxValue = maxEffect / divisor;
-            _numbers[uiCtrl].text = value.ToString();
-            _maxVals[uiCtrl].text = maxValue.ToString();
-            return value;
-        }
 
         // This is an exact copy of OfficeBuildingAI.CalculateServiceValue private method to get info about service coverage
-        // Calls to CalculateResourceEffect are converted to CalculateAndShowSingleServiceValue with exactly the same params
+        // Calls to CalculateResourceEffect are converted to ProcessServiceValue with exactly the same params
         private int CalculateServiceValueOffice(ushort buildingID, ref Building data)
         {
             Singleton<ImmaterialResourceManager>.instance.CheckLocalResources(data.m_position, out var resources, out var index);
@@ -1292,17 +1408,17 @@ namespace ShowIt
             num += CalculateAndShowSingleServiceValue(resourceRate8, 100, 500, 50, 100, 7, 4); // EducationElementary
             num += CalculateAndShowSingleServiceValue(resourceRate9, 100, 500, 50, 100, 7, 5); // EducationHighSchool
             num += CalculateAndShowSingleServiceValue(resourceRate10, 100, 500, 50, 100, 7, 6); // EducationUniversity
-            //num += CalculateAndShowSingleServiceValue(resourceRate13, 50, 100, 80, 100, 5, 12); // RadioCoverage // I dont have this DLC
+            //num += ProcessServiceValue(resourceRate13, 50, 100, 80, 100, 5, 12); // RadioCoverage // I dont have this DLC
             num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate13, 50, 100, 80, 100) / 5;
             num += CalculateAndShowSingleServiceValue(resourceRate14, 100, 1000, 0, 100, 5, 10); // FirewatchCoverage
-            //num += CalculateAndShowSingleServiceValue(resourceRate15, 50, 100, 80, 100, 5, 11); // DisasterCoverage // I dont have this DLC
+            //num += ProcessServiceValue(resourceRate15, 50, 100, 80, 100, 5, 11); // DisasterCoverage // I dont have this DLC
             num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate15, 50, 100, 80, 100) / 5;
             // negatives
             num -= CalculateAndShowSingleServiceValue(resourceRate11, 100, 500, 50, 100, 4, 11); // NoisePollution
-            //num -= CalculateAndShowSingleServiceValue(resourceRate12, 100, 500, 50, 100, 3, 14); // Abandonment // There is no UI overlay for that
+            //num -= ProcessServiceValue(resourceRate12, 100, 500, 50, 100, 3, 14); // Abandonment // There is no UI overlay for that
             num -= ImmaterialResourceManager.CalculateResourceEffect(resourceRate12, 100, 500, 50, 100) / 3;
             Singleton<NaturalResourceManager>.instance.CheckPollution(data.m_position, out var groundPollution);
-            //return num - CalculateAndShowSingleServiceValue(groundPollution, 50, 255, 50, 100, 4; // Infixo todo: missing, there is no resource effect for that
+            //return num - ProcessServiceValue(groundPollution, 50, 255, 50, 100, 4; // Infixo todo: missing, there is no resource effect for that
             return num - ImmaterialResourceManager.CalculateResourceEffect(groundPollution, 50, 255, 50, 100) / 4;
         }
 
@@ -1341,3 +1457,19 @@ namespace ShowIt
 
     }
 }
+
+
+/* LAND VALUE
+// ImmaterialResourceManager
+
+LandValue = 14,
+
+private static bool CalculateLocalResources(
+
+int num15 = buffer[index + 14] + global[14];
+
+// there is a HUGE section that calculates LandValue based on other resources, looks pretty complex
+// it uses many times CalculateResourceEffect(..) with various params
+both: Health, Wellbeing
+negatives: ground pollution, noise pollution, crime rate, fire hazard, abandonment
+*/
