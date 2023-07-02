@@ -123,38 +123,40 @@ namespace ShowIt
         private Color m_progressColor = Color.blue;
         private Color m_completeColor = Color.green;
         private Color m_disabledColor = Color.gray;
-        private string m_text = "Text";
+        //private bool m_disabled = false;
+        private bool m_negative = false;
+        //private string m_text = "Text";
         private float m_value = 0f;
         private float m_maxValue = 0.5f; // progress bar filled 100%
         private float m_limit = 1f; // possible maxValue that will fill 100% entire control
-        private bool m_negative = false;
+        private bool m_belowMid = false;
         // ui components
-        //private string m_name; // is this really needed?
-        //private UIComponent m_parent;
         private UIPanel m_uiPanel;
         private UILabel m_uiTextLabel;
         private UILabel m_uiValueLabel;
         private UIProgressBar m_uiValueBar;
         private UILabel m_uiMaxValueLabel;
-        //private float m_uiValueBarWidth = 100f; // this is proportional to maxValue / limit
 
         // properties
+        public UIPanel Panel { get { return m_uiPanel; } }
+
         public string Text
         {
-            get { return m_text; }
-            set { m_text = value; m_uiTextLabel.text = value; }
+            set { m_uiTextLabel.text = value; }
         }
+
         public float Value
         {
             get { return m_value; }
             set
             {
-                m_value = value;
-                m_uiValueLabel.text = m_value.ToString();
-                m_uiValueBar.value = Mathf.Max(0f, Mathf.Min(1f, m_value / m_maxValue)); // value sets the filled part, as 0.0f to 1.0f
-                m_uiValueBar.progressColor = ( m_value < m_maxValue ? m_progressColor : m_completeColor );
+                m_value = value; UpdateControl();
+                //m_uiValueLabel.text = m_value.ToString();
+                //m_uiValueBar.value = Mathf.Max(0f, Mathf.Min(1f, m_value / m_maxValue)); // value sets the filled part, as 0.0f to 1.0f
+                //m_uiValueBar.progressColor = ( m_value < m_maxValue ? m_progressColor : m_completeColor );
             }
         }
+
         public float MaxValue
         {
             get { return m_maxValue; }
@@ -166,19 +168,15 @@ namespace ShowIt
                     return;
                 }
                 m_maxValue = value;
-                m_uiMaxValueLabel.text = m_maxValue.ToString();
-                ResizeValueBar();
+                UpdateControl();
             }
         }
+
         public bool BelowMid
         {
-            get { return m_uiValueBar.progressColor == m_belowMidColor; }
-            set
-            {
-                m_uiValueBar.progressColor = (value ? m_belowMidColor : m_progressColor);
-                if (m_value >= m_maxValue) m_uiValueBar.progressColor = m_completeColor;
-            }
+            set { m_belowMid = value; UpdateControl(); }
         }
+
         public float Limit
         {
             get { return m_limit; }
@@ -189,48 +187,24 @@ namespace ShowIt
                     Debug.Log("ShowIt.UIServiceBar.Limit: warning, trying to set Limit to <= 0!");
                     return;
                 }
-                //m_maxValue = Mathf.Min(m_maxValue, m_limit);
-                // todo:update progress bar
                 m_limit = value;
-                ResizeValueBar();
-                //m_uiValueBar.width = value; // width sets the size of the entire progress bar
-                //float barMaxWidth = width - 160f; // 100 is for the text, and 2x30 for values
-                //m_uiValueBar.width = barMaxWidth * m_maxValue / m_limit; // width sets the size of the entire progress bar
+                UpdateControl();
             }
         }
-        //bool IsDisabled { get; set; }
-        //public UIComponent parent
-        //{
-            //get { return m_parent; }
-            //set { m_parent = value; }
-        //}
-
-        public Vector3 RelativePosition
-        {
-            get { return m_uiPanel.relativePosition; }
-            set
-            {
-                m_uiPanel.relativePosition = value;
-                //float relX = value.x;
-                //m_uiTextLabel.relativePosition = new Vector3(value.x, 0);
-                //m_uiValueLabel.relativePosition = new Vector3(value.x + 100f, 0);
-                //m_uiValueBar.relativePosition = new Vector3(value.x + 130f, 0);
-                //m_uiMaxValueLabel.relativePosition = new Vector3(value.x + 130f + m_uiValueBar.width, 0);
-            }
-        }
-
-        //bool isVisible { get; set; }
-        //float height { get; set; }
+        
         public float Width
-        {
-            get { return m_uiPanel.width; }
+        {          
             set 
             { 
                 m_uiPanel.width = value;
-                ResizeValueBar();
+                UpdateControl();
             }
         }
-        //string tooltip { get; set; }
+
+        public bool Negative 
+        { 
+            set { m_negative = value; UpdateControl(); } 
+        }
 
         // methods
 
@@ -247,7 +221,7 @@ namespace ShowIt
             m_uiTextLabel.textAlignment = UIHorizontalAlignment.Left;
             m_uiTextLabel.relativePosition = new Vector3(0, 0);
             m_uiTextLabel.textScale = DEFAULT_SCALE; // Infixo todo: connect with options
-            //m_uiMaxValueLabel.isVisible = true;
+            m_uiTextLabel.disabledTextColor = m_disabledColor;
 
             // value
             m_uiValueLabel = m_uiPanel.AddUIComponent<UILabel>();
@@ -255,19 +229,19 @@ namespace ShowIt
             m_uiValueLabel.textAlignment = UIHorizontalAlignment.Center;
             m_uiValueLabel.relativePosition = new Vector3(TEXT_WIDTH, 0);
             m_uiValueLabel.textScale = DEFAULT_SCALE; // Infixo todo: connect with options
-            //m_uiMaxValueLabel.isVisible = true;
+            m_uiValueLabel.disabledTextColor = m_disabledColor;
 
             // bar
             m_uiValueBar = m_uiPanel.AddUIComponent<UIProgressBar>();
             m_uiValueBar.name = name + "ValueBar";
             m_uiValueBar.relativePosition = new Vector3(TEXT_WIDTH + VALUE_WIDTH, 0);
             m_uiValueBar.width = 200;
-            m_uiValueBar.height = DEFAULT_HEIGHT; // Infixo todo: options
+            m_uiValueBar.height = DEFAULT_HEIGHT - 2f; // Infixo todo: options
             m_uiValueBar.progressColor = m_progressColor;
-            m_uiValueBar.progressSprite = "LevelBarForeground";
+            m_uiValueBar.progressSprite = "LevelBarForeground"; // economy panel uses PlainWhite
             m_uiValueBar.backgroundSprite = "LevelBarBackground";
             m_uiValueBar.value = 0.5f;
-            //m_uiValueBar.isVisible = true;
+            m_uiValueBar.disabledColor = m_disabledColor;
 
             // maxValue
             m_uiMaxValueLabel = m_uiPanel.AddUIComponent<UILabel>();
@@ -275,50 +249,33 @@ namespace ShowIt
             m_uiMaxValueLabel.textAlignment = UIHorizontalAlignment.Center;
             m_uiMaxValueLabel.relativePosition = new Vector3(370f, 0);
             m_uiMaxValueLabel.textScale = DEFAULT_SCALE; // Infixo todo: connect with options
-            //m_uiMaxValueLabel.isVisible = true;
+            m_uiMaxValueLabel.disabledTextColor = m_disabledColor;
         }
 
-        // Will resize the main progress bar according to current settings of maxValue and limit
-        private void ResizeValueBar()
+        // Will resize the value bar and set colors according to current settings
+        private void UpdateControl()
         {
-            //m_maxValue = Mathf.Min(m_maxValue, m_limit); // failsafe
-            //m_uiMaxValueLabel.text = m_maxValue.ToString();
-            //m_value = Mathf.Min(m_value, m_maxValue); // if this >max then 100% will be filled but I want to know the actual value still
-            //m_uiValueLabel.text = m_value.ToString();
+            // texts
+            m_uiValueLabel.text = m_value.ToString();
+            m_uiMaxValueLabel.text = m_maxValue.ToString();
+            // value bar
             float barMaxWidth = m_uiPanel.width - TEXT_WIDTH - VALUE_WIDTH - VALUE_WIDTH;
-            m_uiValueBar.width = Mathf.Min( barMaxWidth * m_maxValue / m_limit, barMaxWidth); // width sets the size of the entire progress bar
-            m_uiValueBar.value = m_value / m_maxValue;
+            m_uiValueBar.width = Mathf.Min(barMaxWidth * m_maxValue / m_limit, barMaxWidth); // width sets the size of the entire progress bar
+            m_uiValueBar.value = Mathf.Max(0f, Mathf.Min(1f, m_value / m_maxValue)); // value sets the filled part, as 0.0f to 1.0f
             m_uiMaxValueLabel.relativePosition = new Vector3(TEXT_WIDTH + VALUE_WIDTH + m_uiValueBar.width + 2f, 0);
+            // colors
+            m_uiTextLabel.textColor = (m_negative ? m_negativeColor : m_positiveColor);
+            m_uiValueLabel.textColor = (m_negative ? m_negativeColor : m_positiveColor);
+            m_uiMaxValueLabel.textColor = (m_negative ? m_negativeColor : m_positiveColor);
+            m_uiValueBar.progressColor = (m_negative ? m_negativeColor : (m_belowMid ? m_belowMidColor : m_progressColor));
+            if (m_value >= m_maxValue && !m_negative) m_uiValueBar.progressColor = m_completeColor;
+            // disabled
+            //if (m_disabled)
+            //{
+                //m_uiTextLabel.textColor = m_disabledColor;
+                //m_uiValueLabel.textColor = m_disabledColor;
+                //m_uiMaxValueLabel.textColor = m_disabledColor;
+            //}
         }
-
-        /*public static UIServiceBar CreateUIServiceBar(UIComponent parent, string name, float width, Vector3 relativePosition, string text, float limit, float maxValue)
-        {
-            UIServiceBar uiServiceBar = new UIServiceBar(parent, name + "_ServiceBar")
-            {
-                width = width,
-                relativePosition = relativePosition,
-                Text = text,
-                Limit = limit,
-                MaxValue = maxValue
-            };
-            return uiServiceBar;
-        }
-        */
     }
 }
-/*
- * 
- * 	BudgetItem budgetItem = uIComponent.GetComponent<BudgetItem>();
-	
- * 
-- UIProgressBar bar
-    = UIComponent parent
-
-- UpdateXXX methods ?
-- could be also properties?
-
-LevelBarBackground
-LevelBarForeground
-
-PlainWhite
-*/

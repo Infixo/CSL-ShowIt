@@ -152,12 +152,16 @@ namespace ShowIt
             //parent.AttachUIComponent(uiServiceBar);
             //BudgetItem budgetItem = uIComponent.GetComponent<BudgetItem>();
             //UIServiceBar uiServiceBar = parent.GetComponent<UIServiceBar>();
-            uiServiceBar.Width = 400f;
-            uiServiceBar.RelativePosition = new Vector3(10f, 300f + position * (UIServiceBar.DEFAULT_HEIGHT + 2f)); // Infixo todo: scaling
+            uiServiceBar.Width = 440f; // width of the parent is 0 atm
+            uiServiceBar.Panel.relativePosition = new Vector3(10f, 300f + position * (UIServiceBar.DEFAULT_HEIGHT + 2f)); // Infixo todo: scaling
             uiServiceBar.Text = GetIndicatorName(resource);
-            uiServiceBar.Limit = 100f;
-            uiServiceBar.MaxValue = 8f;
+            uiServiceBar.Limit = 70f; // Biggest is Cargo 100, then Fire 50, others are <= 33
+            uiServiceBar.MaxValue = 20f;
             m_uiServices.Add(resource, uiServiceBar);
+            // disable the ones not available
+            GetIndicatorInfoModes(resource, out InfoManager.InfoMode infoMode, out InfoManager.SubInfoMode subInfoMode);
+            if (resource != GroundPollution && resource != ImmaterialResourceManager.Resource.Abandonment)
+                uiServiceBar.Panel.isEnabled = Singleton<InfoManager>.instance.IsInfoModeAvailable(infoMode);
         }
 
         private void CreateUI()
@@ -1166,33 +1170,22 @@ namespace ShowIt
             _maxVals[uiCtrl].text = maxValue.ToString();
             return value;
         }
-        /// <summary>
-        /// Calculates a service value and shows it in a dedicated UIServiceBar
-        /// </summary>
-        /// <param name="resources"></param>
-        /// <param name="resourceRate"></param>
-        /// <param name="middleRate"></param>
-        /// <param name="maxRate"></param>
-        /// <param name="middleEffect"></param>
-        /// <param name="maxEffect"></param>
-        /// <param name="divisor"></param>
-        /// <param name="uiCtrl"></param>
-        /// <returns></returns>
         private int ProcessServiceValue(
             ushort[] resources, int index, // from CheckLocalResources
             ImmaterialResourceManager.Resource resourceType, // resource type
             //int resourceRate, // not needed - taken from resources
             int middleRate, int maxRate, int middleEffect, int maxEffect, // params for CalculateResourceEffect
-            int divisor, int groundPollutionRate = 0)
+            int divisor, bool negative = false, int groundPollutionRate = 0)
         {
             int resourceRate = ( resourceType == GroundPollution ? groundPollutionRate : resources[index + (int)resourceType] );
             int value = ImmaterialResourceManager.CalculateResourceEffect(resourceRate, middleRate, maxRate, middleEffect, maxEffect) / divisor;
             int maxValue = maxEffect / divisor;
             UIServiceBar uiBar = m_uiServices[resourceType];
+            uiBar.Negative = negative;
+            uiBar.BelowMid = (resourceRate < middleRate); // must be after Value, otherwise will be overwritten
             uiBar.MaxValue = maxValue;
             uiBar.Value = value;
-            uiBar.BelowMid = (resourceRate < middleRate); // must be after Value, otherwise will be overwritten
-            Debug.Log($"ShowIt.ProcessServiceValue: res={resourceType.ToString()} rate={resourceRate} midMax={middleRate}->{maxRate} effect={middleEffect}->{maxEffect}) div={divisor} value={value}->{maxValue} below? {resourceRate < middleRate}");
+            uiBar.Panel.tooltip = $"{resourceType}: rate={resourceRate} midMax={middleRate}->{maxRate} effect={middleEffect}->{maxEffect} div={divisor}";
             return value;
         }
 
@@ -1219,9 +1212,9 @@ namespace ShowIt
             value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.FirewatchCoverage, 100, 1000, 0, 100, 5);
             value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.DisasterCoverage, 50, 100, 80, 100, 5); // I dont have this DLC
             // negatives
-            value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.NoisePollution, 100, 500, 50, 100, 7);
-            value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.Abandonment, 100, 500, 50, 100, 7); // There is no UI overlay for that
-            value -= ProcessServiceValue(resources, index, GroundPollution, 50, 255, 50, 100, 6, groundPollution); // special case
+            value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.NoisePollution, 100, 500, 50, 100, 7, true);
+            value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.Abandonment, 100, 500, 50, 100, 7, true); // There is no UI overlay for that
+            value -= ProcessServiceValue(resources, index, GroundPollution, 50, 255, 50, 100, 6, true, groundPollution); // special case
 
             // original calculations
             int resourceRate = resources[index + 7]; // PublicTransport 7
