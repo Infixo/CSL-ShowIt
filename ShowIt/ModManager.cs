@@ -155,12 +155,12 @@ namespace ShowIt
             uiServiceBar.Width = 440f; // width of the parent is 0 atm
             uiServiceBar.Panel.relativePosition = new Vector3(10f, 300f + position * (UIServiceBar.DEFAULT_HEIGHT + 2f)); // Infixo todo: scaling
             uiServiceBar.Text = GetIndicatorName(resource);
-            uiServiceBar.Limit = 70f; // Biggest is Cargo 100, then Fire 50, others are <= 33
+            uiServiceBar.Limit = 60f; // Biggest is Cargo 100, then Fire 50, others are <= 33
             uiServiceBar.MaxValue = 20f;
             m_uiServices.Add(resource, uiServiceBar);
             // disable the ones not available
             GetIndicatorInfoModes(resource, out InfoManager.InfoMode infoMode, out InfoManager.SubInfoMode subInfoMode);
-            if (resource != GroundPollution && resource != ImmaterialResourceManager.Resource.Abandonment)
+            if (resource != GroundPollution && resource != ImmaterialResourceManager.Resource.Abandonment) // there is no UI overlay for Abandonment
                 uiServiceBar.Panel.isEnabled = Singleton<InfoManager>.instance.IsInfoModeAvailable(infoMode);
         }
 
@@ -1208,12 +1208,12 @@ namespace ShowIt
             value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.EducationHighSchool, 100, 500, 50, 100, 8);
             value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.EducationUniversity, 100, 500, 50, 100, 8);
             value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.CargoTransport, 100, 500, 50, 100, 1);
-            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.RadioCoverage, 50, 100, 80, 100, 5); // I dont have this DLC
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.RadioCoverage, 50, 100, 80, 100, 5);
             value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.FirewatchCoverage, 100, 1000, 0, 100, 5);
-            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.DisasterCoverage, 50, 100, 80, 100, 5); // I dont have this DLC
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.DisasterCoverage, 50, 100, 80, 100, 5);
             // negatives
             value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.NoisePollution, 100, 500, 50, 100, 7, true);
-            value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.Abandonment, 100, 500, 50, 100, 7, true); // There is no UI overlay for that
+            value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.Abandonment, 100, 500, 50, 100, 7, true); // there is no UI overlay for that
             value -= ProcessServiceValue(resources, index, GroundPollution, 50, 255, 50, 100, 6, true, groundPollution); // special case
 
             // original calculations
@@ -1375,6 +1375,29 @@ namespace ShowIt
         private int CalculateServiceValueOffice(ushort buildingID, ref Building data)
         {
             Singleton<ImmaterialResourceManager>.instance.CheckLocalResources(data.m_position, out var resources, out var index);
+            Singleton<NaturalResourceManager>.instance.CheckPollution(data.m_position, out var groundPollution);
+
+            // new calculations
+            int value = 0;
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.PublicTransport, 100, 500, 50, 100, 3);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.PoliceDepartment, 100, 500, 50, 100, 5);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.HealthCare, 100, 500, 50, 100, 5);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.DeathCare, 100, 500, 50, 100, 5);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.PostService, 100, 500, 50, 100, 5);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.FireDepartment, 100, 500, 50, 100, 5);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.Entertainment, 100, 500, 50, 100, 6);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.EducationElementary, 100, 500, 50, 100, 7);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.EducationHighSchool, 100, 500, 50, 100, 7);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.EducationUniversity, 100, 500, 50, 100, 7);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.RadioCoverage, 50, 100, 80, 100, 5);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.FirewatchCoverage, 100, 1000, 0, 100, 5);
+            value += ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.DisasterCoverage, 50, 100, 80, 100, 5);
+            // negatives
+            value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.NoisePollution, 100, 500, 50, 100, 4, true);
+            value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.Abandonment, 100, 500, 50, 100, 3, true); // there is no UI overlay for that
+            value -= ProcessServiceValue(resources, index, GroundPollution, 50, 255, 50, 100, 4, true, groundPollution); // special case
+
+
             int resourceRate = resources[index + 7]; // PublicTransport
             int resourceRate2 = resources[index + 2]; // PoliceDepartment
             int resourceRate3 = resources[index]; // HealthCare
@@ -1410,9 +1433,13 @@ namespace ShowIt
             num -= CalculateAndShowSingleServiceValue(resourceRate11, 100, 500, 50, 100, 4, 11); // NoisePollution
             //num -= ProcessServiceValue(resourceRate12, 100, 500, 50, 100, 3, 14); // Abandonment // There is no UI overlay for that
             num -= ImmaterialResourceManager.CalculateResourceEffect(resourceRate12, 100, 500, 50, 100) / 3;
-            Singleton<NaturalResourceManager>.instance.CheckPollution(data.m_position, out var groundPollution);
             //return num - ProcessServiceValue(groundPollution, 50, 255, 50, 100, 4; // Infixo todo: missing, there is no resource effect for that
-            return num - ImmaterialResourceManager.CalculateResourceEffect(groundPollution, 50, 255, 50, 100) / 4;
+            num -= ImmaterialResourceManager.CalculateResourceEffect(groundPollution, 50, 255, 50, 100) / 4;
+
+            // debug check
+            Debug.Log($"ShowIt.CalculateServiceValueOffice, buildingID={buildingID}, original={num}, new={value}, same? {value == num}");
+
+            return num;
         }
 
         private void ShowOfficeProgress(ushort buildingId, ref Building building)
