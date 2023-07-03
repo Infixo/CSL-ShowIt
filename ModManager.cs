@@ -1164,7 +1164,11 @@ namespace ShowIt2
             int homeCount = 0;
             int aliveHomeCount = 0;
             int emptyHomeCount = 0;
-            GetHomeBehaviour(buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount, ref homeCount, ref aliveHomeCount, ref emptyHomeCount);
+            CommonBuildingAI buildingAI = (CommonBuildingAI)building.Info.m_buildingAI;
+            if (ShowIt2Patcher.patched)
+                CommonBuildingAI_Patches.GetHomeBehaviour_Reverse(buildingAI, buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount, ref homeCount, ref aliveHomeCount, ref emptyHomeCount);
+            else
+                GetHomeBehaviour(buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount, ref homeCount, ref aliveHomeCount, ref emptyHomeCount);
 
             // Citizen.BehaviourData is not accessible, so we must use Building data
             int education = behaviour.m_educated1Count + behaviour.m_educated2Count * 2 + behaviour.m_educated3Count * 3;
@@ -1323,7 +1327,11 @@ namespace ShowIt2
             Citizen.BehaviourData behaviour = default;
             int aliveWorkerCount = 0;
             int totalWorkerCount = 0;
-            GetWorkBehaviour(buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
+            CommonBuildingAI buildingAI = (CommonBuildingAI)building.Info.m_buildingAI;
+            if (ShowIt2Patcher.patched)
+                CommonBuildingAI_Patches.GetWorkBehaviour_Reverse(buildingAI, buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
+            else
+                GetWorkBehaviour(buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
             int education = behaviour.m_educated1Count + behaviour.m_educated2Count * 2 + behaviour.m_educated3Count * 3;
             if (aliveWorkerCount != 0)
             {
@@ -1380,7 +1388,11 @@ namespace ShowIt2
             Citizen.BehaviourData behaviour = default(Citizen.BehaviourData);
             int aliveCount = 0;
             int totalCount = 0;
-            GetVisitBehaviour(buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount); // aliveCount == visitorCount
+            CommonBuildingAI buildingAI = (CommonBuildingAI)building.Info.m_buildingAI;
+            if (ShowIt2Patcher.patched)
+                CommonBuildingAI_Patches.GetVisitBehaviour_Reverse(buildingAI, buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount); // aliveCount == visitorCount
+            else
+                GetVisitBehaviour(buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount); // aliveCount == visitorCount
             int wealth = behaviour.m_wealth1Count + behaviour.m_wealth2Count * 2 + behaviour.m_wealth3Count * 3;
             if (aliveCount != 0)
             {
@@ -1521,7 +1533,11 @@ namespace ShowIt2
             Citizen.BehaviourData behaviour = default;
             int aliveWorkerCount = 0;
             int totalWorkerCount = 0;
-            GetWorkBehaviour(buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
+            CommonBuildingAI buildingAI = (CommonBuildingAI)building.Info.m_buildingAI;
+            if (ShowIt2Patcher.patched)
+                CommonBuildingAI_Patches.GetWorkBehaviour_Reverse(buildingAI, buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
+            else
+                GetWorkBehaviour(buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
             int education = behaviour.m_educated1Count + behaviour.m_educated2Count * 2 + behaviour.m_educated3Count * 3;
             if (aliveWorkerCount != 0)
             {

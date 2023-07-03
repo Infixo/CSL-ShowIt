@@ -1,13 +1,24 @@
 ﻿using ICities;
 using System;
 using System.Reflection;
+using CitiesHarmony.API;
 
 namespace ShowIt2
 {
     public class ModInfo : IUserMod
     {
-        public string Name => "Show It! (Infixo)";
-        public string Description => "Shows vital indicators and progress info for zoned buildings.";
+        public string Name => "Show It! 2";
+        public string Description => "Shows service coverage, land value and details about leveling for zoned buildings.";
+		
+        public void OnEnabled()
+        {
+            HarmonyHelper.DoOnHarmonyReady(() => ShowIt2Patcher.PatchAll());
+        }
+
+        public void OnDisabled()
+        {
+            if (HarmonyHelper.IsHarmonyInstalled) ShowIt2Patcher.UnpatchAll();
+        }
 
         private static readonly string[] IndicatorsPanelAlignmentLabels =
         {
