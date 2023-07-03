@@ -114,7 +114,7 @@ namespace ShowIt
     {
         private const float DEFAULT_SCALE = 0.8f;
         private const float TEXT_WIDTH = 45f + 120f * DEFAULT_SCALE;
-        private const float VALUE_WIDTH = 6f + 14f * DEFAULT_SCALE;
+        private const float VALUE_WIDTH = 7f + 16f * DEFAULT_SCALE;
         public const float DEFAULT_HEIGHT = 1f + 17f * DEFAULT_SCALE;
         // internals
         private Color m_negativeColor = Color.red;
@@ -226,7 +226,8 @@ namespace ShowIt
             // value
             m_uiValueLabel = m_uiPanel.AddUIComponent<UILabel>();
             m_uiValueLabel.name = name + "Value";
-            m_uiValueLabel.textAlignment = UIHorizontalAlignment.Center;
+            m_uiValueLabel.width = VALUE_WIDTH;
+            m_uiValueLabel.textAlignment = UIHorizontalAlignment.Left;
             m_uiValueLabel.relativePosition = new Vector3(TEXT_WIDTH, 0);
             m_uiValueLabel.textScale = DEFAULT_SCALE; // Infixo todo: connect with options
             m_uiValueLabel.disabledTextColor = m_disabledColor;
@@ -246,6 +247,7 @@ namespace ShowIt
             // maxValue
             m_uiMaxValueLabel = m_uiPanel.AddUIComponent<UILabel>();
             m_uiMaxValueLabel.name = name + "MaxValue";
+            m_uiMaxValueLabel.width = VALUE_WIDTH;
             m_uiMaxValueLabel.textAlignment = UIHorizontalAlignment.Center;
             m_uiMaxValueLabel.relativePosition = new Vector3(370f, 0);
             m_uiMaxValueLabel.textScale = DEFAULT_SCALE; // Infixo todo: connect with options

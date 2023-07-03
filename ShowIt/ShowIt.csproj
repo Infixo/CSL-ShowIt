@@ -49,6 +49,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="CalcLocalRes.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="Helpers\CommercialBuildingHelper.cs" />
     <Compile Include="Helpers\IndustrialBuildingHelper.cs" />
