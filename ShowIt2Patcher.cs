@@ -67,4 +67,35 @@ namespace ShowIt2
         }
     }
 
+    [HarmonyPatch(typeof(ZonedBuildingWorldInfoPanel))]
+    public static class ZonedBuildingWorldInfoPanel_Patches
+    {
+        /*
+        [HarmonyPostfix, HarmonyPatch("UpdateBindings")]
+        public static void UpdateBindings_Postfix()
+        {
+            // Currently selected building.
+            ushort buildingID = WorldInfoPanel.GetCurrentInstanceID().Building;
+            Debug.Log($"{ShowIt2Patcher.HarmonyId}.UpdateBindings_Postfix: id={buildingID}");
+        }
+        */
+        [HarmonyPostfix, HarmonyPatch("Start")]
+        public static void Start_Postfix(ZonedBuildingWorldInfoPanel __instance)
+        {
+            // creates and initializes UI controls
+            ushort buildingID = WorldInfoPanel.GetCurrentInstanceID().Building;
+            Debug.Log($"{ShowIt2Patcher.HarmonyId}.Start_Postfix: id={buildingID} building={__instance.buildingName} component={__instance.component.name}");
+            // Infixo.ShowIt2.Start_Postfix: id=0 building=Name component=(Library) ZonedBuildingWorldInfoPanel
+        }
+
+        [HarmonyPostfix, HarmonyPatch("OnSetTarget")]
+        public static void OnSetTarget_Postfix(ZonedBuildingWorldInfoPanel __instance)
+        {
+            ushort buildingID = WorldInfoPanel.GetCurrentInstanceID().Building;
+            Debug.Log($"{ShowIt2Patcher.HarmonyId}.OnSetTarget_Postfix: id={buildingID} building={__instance.buildingName}");
+            // Infixo.ShowIt2.OnSetTarget_Postfix: id=17609 building=Nylons Galore
+            Loading.Manager.OnSetTarget(buildingID);
+        }
+    }
+
 } // namespace

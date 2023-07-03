@@ -1,18 +1,20 @@
 ﻿using ColossalFramework;
-using ColossalFramework.Math;
+using ColossalFramework.Globalization;
+//using ColossalFramework.Math;
 using ColossalFramework.UI;
-using ICities;
+//using ICities;
 using System;
-using System.Collections;
+//using System.CodeDom;
+//using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Security.AccessControl;
+//using System.Security.AccessControl;
 using UnityEngine;
-using UnityEngine.Experimental.Director;
-using static Citizen;
-using static ColossalFramework.DataBinding.BindPropertyByKey;
-using static ImmaterialResourceManager;
-using static System.Net.Mime.MediaTypeNames;
+//using UnityEngine.Experimental.Director;
+//using static Citizen;
+//using static ColossalFramework.DataBinding.BindPropertyByKey;
+//using static ImmaterialResourceManager;
+//using static System.Net.Mime.MediaTypeNames;
 
 // Alias the Enum: You can create an alias for an existing enum by using the using directive. 
 using ImmaterialResource = ImmaterialResourceManager.Resource;
@@ -22,6 +24,7 @@ namespace ShowIt2
 
     public class ModManager : MonoBehaviour
     {
+        public const ImmaterialResourceManager.Resource WaterProximity = (ImmaterialResourceManager.Resource)253; // Water proximity does not exists in IRM but it is used to calculate land value
         public const ImmaterialResourceManager.Resource GroundPollution = (ImmaterialResourceManager.Resource)254; // Ground Pollution does not exists in IRM but it is used to calculate service coverage value
 
         private bool _initialized;
@@ -91,64 +94,78 @@ namespace ShowIt2
             }
         }
 
+        public void OnSetTarget(ushort buildingID)
+        {
+            ushort hackedID = ((InstanceID)m_uiZonedBuildingWorldInfoPanel
+                    .GetType()
+                    .GetField("m_InstanceID", BindingFlags.NonPublic | BindingFlags.Instance)
+                    .GetValue(m_uiZonedBuildingWorldInfoPanel))
+                    .Building;
+            Debug.Log($"ShowIt2.ModManager.OnSetTarget: passed id={buildingID} hacked id={hackedID}");
+            if (m_uiMainPanel.isVisible)
+                RefreshData();
+        }
+
         public void Update()
         {
             //try
             //{
-                if (!_initialized || ModConfig.Instance.ConfigUpdated)
-                {
-                    UpdateUI();
+            if (!_initialized || ModConfig.Instance.ConfigUpdated)
+            {
+                UpdateUI();
 
-                    _initialized = true;
-                    ModConfig.Instance.ConfigUpdated = false;
-                }
+                _initialized = true;
+                ModConfig.Instance.ConfigUpdated = false;
+            }
 
-                if (m_uiZonedBuildingWorldInfoPanel.component.isVisible && m_uiMainPanel.isVisible)
-                //{
-                    //_cachedBuildingID = 0;
-                //}
-                //else
-                //{
-                    RefreshData();
-                //}
+            //if (m_uiZonedBuildingWorldInfoPanel.component.isVisible && m_uiMainPanel.isVisible)
+            //{
+            //_cachedBuildingID = 0;
+            //}
+            //else
+            //{
+            //RefreshData();
+            //}
             //}
             //catch (Exception e)
             //{
-                //Debug.Log("[Show It!] ModManager:Update -> Exception: " + e.Message);
+            //Debug.Log("[Show It!] ModManager:Update -> Exception: " + e.Message);
             //}
         }
 
         public void OnDestroy()
         {
-            try
+            //try
+            //{
+            /*
+            for (var i = 0; i < MaxNumberOfCharts; i++)
             {
-                for (var i = 0; i < MaxNumberOfCharts; i++)
-                {
-                    Destroy(_charts[i]);
-                    Destroy(_numbers[i]);
-                    Destroy(_maxVals[i]); // Infixo
-                    Destroy(_icons[i]);
-                    Destroy(_labels[i]);
-                }
-                //if (_header != null)
-                //{
-                //Destroy(_header);
-                //}
-                if (m_uiMainPanel != null)
-                {
-                    Destroy(m_uiMainPanel);
-                }
-                if (_indicatorsCheckBox != null)
-                {
-                    Destroy(_indicatorsCheckBox);
-                }
-                // Infixo todo: add Destroy for other labels
-                // Infixo todo: destroy service bars
+                Destroy(_charts[i]);
+                Destroy(_numbers[i]);
+                Destroy(_maxVals[i]); // Infixo
+                Destroy(_icons[i]);
+                Destroy(_labels[i]);
             }
-            catch (Exception e)
+            */
+            //if (_header != null)
+            //{
+            //Destroy(_header);
+            //}
+            if (m_uiMainPanel != null)
             {
-                Debug.Log("[Show It!] ModManager:OnDestroy -> Exception: " + e.Message);
+                Destroy(m_uiMainPanel);
             }
+            if (_indicatorsCheckBox != null)
+            {
+                Destroy(_indicatorsCheckBox);
+            }
+            // Infixo todo: add Destroy for other labels
+            // Infixo todo: destroy service bars
+            //}
+            //catch (Exception e)
+            //{
+            //Debug.Log("[Show It!] ModManager:OnDestroy -> Exception: " + e.Message);
+            //}
         }
 
         private void CreateUIServiceBar(UIComponent parent, int position, ImmaterialResourceManager.Resource resource)
@@ -159,7 +176,8 @@ namespace ShowIt2
             //UIServiceBar uiServiceBar = parent.GetComponent<UIServiceBar>();
             uiServiceBar.Width = 440f; // width of the parent is 0 atm
             uiServiceBar.Panel.relativePosition = new Vector3(10f, 60f + position * (UIServiceBar.DEFAULT_HEIGHT + 2f)); // Infixo todo: scaling
-            uiServiceBar.Text = GetIndicatorName(resource);
+            //uiServiceBar.Text = GetResourceName(resource);
+            uiServiceBar.Text = GetResourceName(resource);
             uiServiceBar.Limit = 60f; // Biggest is Cargo 100, then Fire 50, others are <= 33
             uiServiceBar.MaxValue = 20f;
             m_uiServices.Add(resource, uiServiceBar);
@@ -187,19 +205,19 @@ namespace ShowIt2
             m_uiMainPanel.height = 60f + (UIServiceBar.DEFAULT_HEIGHT + 2f) * 24 + 10f;
             m_uiMainPanel.width = m_uiZonedBuildingWorldInfoPanel.component.width;
 
-                _indicatorsCheckBox = UIUtils.CreateCheckBox(_makeHistoricalPanel, "ShowItIndicatorsCheckBox", "Indicators", ModConfig.Instance.ShowIndicators);
-                _indicatorsCheckBox.width = 110f;
-                _indicatorsCheckBox.label.textColor = new Color32(185, 221, 254, 255);
-                _indicatorsCheckBox.label.textScale = 0.8125f;
-                _indicatorsCheckBox.tooltip = "Indicators will show how well serviced the building is and what problems might prevent the building from leveling up.";
-                _indicatorsCheckBox.AlignTo(_makeHistoricalPanel, UIAlignAnchor.TopLeft);
-                _indicatorsCheckBox.relativePosition = new Vector3(_makeHistoricalPanel.width - _indicatorsCheckBox.width, 6f);
-                _indicatorsCheckBox.eventCheckChanged += (component, value) =>
-                {
-                    m_uiMainPanel.isVisible = value;
-                    ModConfig.Instance.ShowIndicators = value;
-                    ModConfig.Instance.Save();
-                };
+            _indicatorsCheckBox = UIUtils.CreateCheckBox(_makeHistoricalPanel, "ShowItIndicatorsCheckBox", "Indicators", ModConfig.Instance.ShowPanel);
+            _indicatorsCheckBox.width = 110f;
+            _indicatorsCheckBox.label.textColor = new Color32(185, 221, 254, 255);
+            _indicatorsCheckBox.label.textScale = 0.8125f;
+            _indicatorsCheckBox.tooltip = "Indicators will show how well serviced the building is and what problems might prevent the building from leveling up.";
+            _indicatorsCheckBox.AlignTo(_makeHistoricalPanel, UIAlignAnchor.TopLeft);
+            _indicatorsCheckBox.relativePosition = new Vector3(_makeHistoricalPanel.width - _indicatorsCheckBox.width, 6f);
+            _indicatorsCheckBox.eventCheckChanged += (component, value) =>
+            {
+                m_uiMainPanel.isVisible = value;
+                ModConfig.Instance.ShowPanel = value;
+                ModConfig.Instance.Save();
+            };
 
             //_header = UIUtils.CreateLabel(m_uiMainPanel, "ShowItIndicatorsPanelHeader", "Service coverage");
             //_header.font = UIUtils.GetUIFont("OpenSans-Regular");
@@ -299,11 +317,11 @@ namespace ShowIt2
             CreateUIServiceBar(m_uiMainPanel, 21, GroundPollution);
             CreateUIServiceBar(m_uiMainPanel, 22, ImmaterialResourceManager.Resource.FireHazard); // land value
             CreateUIServiceBar(m_uiMainPanel, 23, ImmaterialResourceManager.Resource.CrimeRate); // land value
-            //}
-            //catch (Exception e)
-            //{
-                //Debug.Log("[Show It!] ModManager:CreateUI -> Exception: " + e.Message);
-            //}
+                                                                                                 //}
+                                                                                                 //catch (Exception e)
+                                                                                                 //{
+                                                                                                 //Debug.Log("[Show It!] ModManager:CreateUI -> Exception: " + e.Message);
+                                                                                                 //}
         }
 
         // Infixo: place UI controls and reorganize UI when config changed
@@ -311,79 +329,79 @@ namespace ShowIt2
         {
             //try
             //{
-                // Infixo: progress section
-                //_header.relativePosition = new Vector3(m_uiMainPanel.width / 2f - _header.width / 2f, _header.height / 2f + 5f);
-                // Infixo: new section showing leveling progress
-                // leveling progress - wealth, education section
-                _progTopName.relativePosition = new Vector3(10, 10);// education or wealth
-                _progTopProgress.relativePosition = new Vector3(150, 10); // number 1..15
-                _progTopValue.relativePosition = new Vector3(200, 10); // actual value number
-                // Infixo: todo slider showing nicely the progress and tresholds for various levels
-                // leveling progress - land value, service coverage
-                _progBotName.relativePosition = new Vector3(10, 30); // land value or service coverage
-                _progBotProgress.relativePosition = new Vector3(150, 30); // number 1..15
-                _progBotValue.relativePosition = new Vector3(200, 30); // actual value number
-                // Infixo: todo slider showing nicely the progress and tresholds for various levels
+            // Infixo: progress section
+            //_header.relativePosition = new Vector3(m_uiMainPanel.width / 2f - _header.width / 2f, _header.height / 2f + 5f);
+            // Infixo: new section showing leveling progress
+            // leveling progress - wealth, education section
+            _progTopName.relativePosition = new Vector3(10, 10);// education or wealth
+            _progTopProgress.relativePosition = new Vector3(150, 10); // number 1..15
+            _progTopValue.relativePosition = new Vector3(200, 10); // actual value number
+                                                                   // Infixo: todo slider showing nicely the progress and tresholds for various levels
+                                                                   // leveling progress - land value, service coverage
+            _progBotName.relativePosition = new Vector3(10, 30); // land value or service coverage
+            _progBotProgress.relativePosition = new Vector3(150, 30); // number 1..15
+            _progBotValue.relativePosition = new Vector3(200, 30); // actual value number
+                                                                   // Infixo: todo slider showing nicely the progress and tresholds for various levels
 
-                int rows;
-                int columns;
-                float horizontalSpacing = ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing;
-                float verticalSpacing = ModConfig.Instance.IndicatorsPanelChartVerticalSpacing;
-                float topSpacing = 40f; // Infixo: move all controls 300 down 60f + position * (UIServiceBar.DEFAULT_HEIGHT + 2f)
-                float bottomSpacing = 15f;
-                float horizontalPadding = 0f;
-                float verticalPadding = 0f;
+            //int rows;
+            //int columns;
+            //float horizontalSpacing = ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing;
+            float verticalSpacing = ModConfig.Instance.Spacing;
+            //float topSpacing = 40f; // Infixo: move all controls 300 down 60f + position * (UIServiceBar.DEFAULT_HEIGHT + 2f)
+            //float bottomSpacing = 15f;
+            //float horizontalPadding = 0f;
+            //float verticalPadding = 0f;
 
-                if (ModConfig.Instance.IndicatorsPanelAlignment is "Right")
-                {
-                    rows = Mathf.FloorToInt((m_uiMainPanel.parent.height - topSpacing - bottomSpacing - verticalSpacing) / (ModConfig.Instance.IndicatorsPanelChartSize + ModConfig.Instance.IndicatorsPanelChartVerticalSpacing));
-                    columns = Mathf.CeilToInt((float)MaxNumberOfCharts / rows);
+            if (ModConfig.Instance.Alignment is "Right")
+            {
+                //rows = Mathf.FloorToInt((m_uiMainPanel.parent.height - topSpacing - bottomSpacing - verticalSpacing) / (ModConfig.Instance.Scaling + ModConfig.Instance.Spacing));
+                //columns = Mathf.CeilToInt((float)MaxNumberOfCharts / rows);
 
-                    m_uiMainPanel.AlignTo(m_uiMainPanel.parent, UIAlignAnchor.TopRight);
-                    //m_uiMainPanel.width = columns * (ModConfig.Instance.IndicatorsPanelChartSize + ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing);
-                    //m_uiMainPanel.height = m_uiMainPanel.parent.height - bottomSpacing;
-                    m_uiMainPanel.relativePosition = new Vector3(m_uiMainPanel.parent.width + 1f, 0f);
+                m_uiMainPanel.AlignTo(m_uiMainPanel.parent, UIAlignAnchor.TopRight);
+                //m_uiMainPanel.width = columns * (ModConfig.Instance.Scaling + ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing);
+                //m_uiMainPanel.height = m_uiMainPanel.parent.height - bottomSpacing;
+                m_uiMainPanel.relativePosition = new Vector3(m_uiMainPanel.parent.width + 1f, 0f);
 
-                    horizontalPadding = ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing / 2f;
-                    verticalPadding = (m_uiMainPanel.parent.height - topSpacing - bottomSpacing - rows * (ModConfig.Instance.IndicatorsPanelChartSize + ModConfig.Instance.IndicatorsPanelChartVerticalSpacing)) / 2f;
-                }
-                else
-                {
-                    columns = Mathf.FloorToInt((m_uiMainPanel.parent.width - horizontalSpacing) / (ModConfig.Instance.IndicatorsPanelChartSize + ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing));
-                    rows = Mathf.CeilToInt((float)MaxNumberOfCharts / columns);
+                //horizontalPadding = ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing / 2f;
+                //verticalPadding = (m_uiMainPanel.parent.height - topSpacing - bottomSpacing - rows * (ModConfig.Instance.Scaling + ModConfig.Instance.Spacing)) / 2f;
+            }
+            else
+            {
+                //columns = Mathf.FloorToInt((m_uiMainPanel.parent.width - horizontalSpacing) / (ModConfig.Instance.Scaling + ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing));
+                //rows = Mathf.CeilToInt((float)MaxNumberOfCharts / columns);
 
-                    m_uiMainPanel.AlignTo(m_uiMainPanel.parent, UIAlignAnchor.BottomLeft);
-                    //m_uiMainPanel.width = m_uiMainPanel.parent.width;
-                    //m_uiMainPanel.height = rows * (ModConfig.Instance.IndicatorsPanelChartSize + ModConfig.Instance.IndicatorsPanelChartVerticalSpacing) + topSpacing + bottomSpacing;
-                    m_uiMainPanel.relativePosition = new Vector3(0f, m_uiMainPanel.parent.height + 1f);
+                m_uiMainPanel.AlignTo(m_uiMainPanel.parent, UIAlignAnchor.BottomLeft);
+                //m_uiMainPanel.width = m_uiMainPanel.parent.width;
+                //m_uiMainPanel.height = rows * (ModConfig.Instance.Scaling + ModConfig.Instance.Spacing) + topSpacing + bottomSpacing;
+                m_uiMainPanel.relativePosition = new Vector3(0f, m_uiMainPanel.parent.height + 1f);
 
-                    horizontalPadding = (m_uiMainPanel.parent.width - columns * (ModConfig.Instance.IndicatorsPanelChartSize + ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing)) / 2f;
-                    verticalPadding = ModConfig.Instance.IndicatorsPanelChartVerticalSpacing / 2f;
-                }
-                // Infixo todo: FIX change later!!!!
-                //m_uiMainPanel.height = m_uiMainPanel.height + 25f * 17;
+                //horizontalPadding = (m_uiMainPanel.parent.width - columns * (ModConfig.Instance.Scaling + ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing)) / 2f;
+                //verticalPadding = ModConfig.Instance.Spacing / 2f;
+            }
+            // Infixo todo: FIX change later!!!!
+            //m_uiMainPanel.height = m_uiMainPanel.height + 25f * 17;
 
-                //_header.relativePosition = new Vector3(m_uiMainPanel.width / 2f - _header.width / 2f, _header.height / 2f + 105f); // Infixo: move down by 100
-                /*
-                UIRadialChart chart;
+            //_header.relativePosition = new Vector3(m_uiMainPanel.width / 2f - _header.width / 2f, _header.height / 2f + 105f); // Infixo: move down by 100
+            /*
+            UIRadialChart chart;
 
-                for (var i = 0; i < MaxNumberOfCharts; i++)
-                {
-                    chart = _charts[i];
-                    chart.AlignTo(m_uiMainPanel, UIAlignAnchor.TopRight);
-                    chart.size = new Vector3(ModConfig.Instance.IndicatorsPanelChartSize, ModConfig.Instance.IndicatorsPanelChartSize);
-                    chart.relativePosition = new Vector3(horizontalPadding + i % columns * (chart.width + horizontalSpacing), topSpacing + verticalPadding + i / columns * (chart.height + verticalSpacing));
+            for (var i = 0; i < MaxNumberOfCharts; i++)
+            {
+                chart = _charts[i];
+                chart.AlignTo(m_uiMainPanel, UIAlignAnchor.TopRight);
+                chart.size = new Vector3(ModConfig.Instance.Scaling, ModConfig.Instance.Scaling);
+                chart.relativePosition = new Vector3(horizontalPadding + i % columns * (chart.width + horizontalSpacing), topSpacing + verticalPadding + i / columns * (chart.height + verticalSpacing));
 
-                    _numbers[i].textScale = ModConfig.Instance.IndicatorsPanelNumberTextScale;
-                    _maxVals[i].textScale = ModConfig.Instance.IndicatorsPanelNumberTextScale;
-                    _icons[i].size = new Vector3(ModConfig.Instance.IndicatorsPanelIconSize, ModConfig.Instance.IndicatorsPanelIconSize);
-                    _labels[i].textScale = ModConfig.Instance.IndicatorsPanelLabelTextScale;
-                }
-                */
+                _numbers[i].textScale = ModConfig.Instance.IndicatorsPanelNumberTextScale;
+                _maxVals[i].textScale = ModConfig.Instance.IndicatorsPanelNumberTextScale;
+                _icons[i].size = new Vector3(ModConfig.Instance.IndicatorsPanelIconSize, ModConfig.Instance.IndicatorsPanelIconSize);
+                _labels[i].textScale = ModConfig.Instance.IndicatorsPanelLabelTextScale;
+            }
+            */
             //}
             //catch (Exception e)
             //{
-                //Debug.Log("[Show It!] ModManager:UpdateUI -> Exception: " + e.Message);
+            //Debug.Log("[Show It!] ModManager:UpdateUI -> Exception: " + e.Message);
             //}
         }
 
@@ -397,7 +415,7 @@ namespace ShowIt2
                 {
                     if (IsIndicatorAvailable(resources[i]))
                     {
-                        SetChart(chartIndex, resources[i]);
+                        //SetChart(chartIndex, resources[i]);
                         chartIndex++;
                     }
                 }
@@ -444,7 +462,7 @@ namespace ShowIt2
                 _charts[index].GetSlice(0).innerColor = color;
 
                 _charts[index].SetValues(resourceEffectPercentage, 1 - resourceEffectPercentage);
-                _charts[index].tooltip = GetIndicatorName(resource);
+                _charts[index].tooltip = GetResourceName(resource);
                 _charts[index].objectUserData = resource;
                 _charts[index].isVisible = true;
 
@@ -457,28 +475,28 @@ namespace ShowIt2
                 _maxVals[index].isVisible = true;
 
                 _icons[index].spriteName = GetIndicatorSprite(resource);
-                _icons[index].tooltip = GetIndicatorName(resource);
+                _icons[index].tooltip = GetResourceName(resource);
 
-                _labels[index].text = GetIndicatorName(resource).Substring(0, 4) + ".";
-                _labels[index].tooltip = GetIndicatorName(resource);
+                _labels[index].text = GetResourceName(resource).Substring(0, 4) + ".";
+                _labels[index].tooltip = GetResourceName(resource);
 
-                if (ModConfig.Instance.IndicatorsPanelLegend is "Icons")
-                {
-                    _icons[index].position = new Vector3(_charts[index].width / 2f - _icons[index].width / 2f, 0f - (ModConfig.Instance.IndicatorsPanelChartSize / 1.25f));
-                    _icons[index].isVisible = true;
-                }
-                else if (ModConfig.Instance.IndicatorsPanelLegend is "Labels")
-                {
-                    _labels[index].position = new Vector3(_charts[index].width / 2f - _labels[index].width / 2f, 0f - ModConfig.Instance.IndicatorsPanelChartSize);
-                    _labels[index].isVisible = true;
-                }
-                else
-                {
-                    _icons[index].position = new Vector3(_charts[index].width / 2f - _icons[index].width / 2f, 0f - (ModConfig.Instance.IndicatorsPanelChartSize / 1.75f));
-                    _labels[index].position = new Vector3(_charts[index].width / 2f - _labels[index].width / 2f, 0f - ModConfig.Instance.IndicatorsPanelChartSize);
-                    _icons[index].isVisible = true;
-                    _labels[index].isVisible = true;
-                }
+                //if (ModConfig.Instance.IndicatorsPanelLegend is "Icons")
+                //{
+                //_icons[index].position = new Vector3(_charts[index].width / 2f - _icons[index].width / 2f, 0f - (ModConfig.Instance.Scaling / 1.25f));
+                //_icons[index].isVisible = true;
+                //}
+                //else if (ModConfig.Instance.IndicatorsPanelLegend is "Labels")
+                //{
+                //_labels[index].position = new Vector3(_charts[index].width / 2f - _labels[index].width / 2f, 0f - ModConfig.Instance.Scaling);
+                //_labels[index].isVisible = true;
+                //}
+                //else
+                //{
+                //_icons[index].position = new Vector3(_charts[index].width / 2f - _icons[index].width / 2f, 0f - (ModConfig.Instance.Scaling / 1.75f));
+                //_labels[index].position = new Vector3(_charts[index].width / 2f - _labels[index].width / 2f, 0f - ModConfig.Instance.Scaling);
+                //_icons[index].isVisible = true;
+                //_labels[index].isVisible = true;
+                //}
             }
             catch (Exception e)
             {
@@ -525,15 +543,16 @@ namespace ShowIt2
         {
             //try
             //{
-                ushort buildingId = ((InstanceID)m_uiZonedBuildingWorldInfoPanel
-                        .GetType()
-                        .GetField("m_InstanceID", BindingFlags.NonPublic | BindingFlags.Instance)
-                        .GetValue(m_uiZonedBuildingWorldInfoPanel))
-                        .Building;
+            ushort buildingID = WorldInfoPanel.GetCurrentInstanceID().Building;
+            //ushort buildingId = ((InstanceID)m_uiZonedBuildingWorldInfoPanel
+            //.GetType()
+            //.GetField("m_InstanceID", BindingFlags.NonPublic | BindingFlags.Instance)
+            //.GetValue(m_uiZonedBuildingWorldInfoPanel))
+            //.Building;
 
-                //if (_cachedBuildingID == 0 || _cachedBuildingID != buildingId)
-                //{
-                    Building building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[buildingId];
+            //if (_cachedBuildingID == 0 || _cachedBuildingID != buildingID)
+            //{
+            Building building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[buildingID];
             /*
                     _effectsOnZonedBuilding.Clear();
                     _maxEffectsOnZonedBuilding.Clear();
@@ -547,20 +566,20 @@ namespace ShowIt2
                         {
                             case ItemClass.Zone.ResidentialHigh:
                             case ItemClass.Zone.ResidentialLow:
-                                effect = ResidentialBuildingHelper.CalculateResourceEffect(buildingId, ref building, (ImmaterialResourceManager.Resource)i);
+                                effect = ResidentialBuildingHelper.CalculateResourceEffect(buildingID, ref building, (ImmaterialResourceManager.Resource)i);
                                 maxEffect = ResidentialBuildingHelper.GetMaxEffect((ImmaterialResourceManager.Resource)i);
                                 break;
                             case ItemClass.Zone.Industrial:
-                                effect = IndustrialBuildingHelper.CalculateResourceEffect(buildingId, ref building, (ImmaterialResourceManager.Resource)i);
+                                effect = IndustrialBuildingHelper.CalculateResourceEffect(buildingID, ref building, (ImmaterialResourceManager.Resource)i);
                                 maxEffect = IndustrialBuildingHelper.GetMaxEffect((ImmaterialResourceManager.Resource)i);
                                 break;
                             case ItemClass.Zone.CommercialHigh:
                             case ItemClass.Zone.CommercialLow:
-                                effect = CommercialBuildingHelper.CalculateResourceEffect(buildingId, ref building, (ImmaterialResourceManager.Resource)i);
+                                effect = CommercialBuildingHelper.CalculateResourceEffect(buildingID, ref building, (ImmaterialResourceManager.Resource)i);
                                 maxEffect = CommercialBuildingHelper.GetMaxEffect((ImmaterialResourceManager.Resource)i);
                                 break;
                             case ItemClass.Zone.Office:
-                                effect = OfficeBuildingHelper.CalculateResourceEffect(buildingId, ref building, (ImmaterialResourceManager.Resource)i);
+                                effect = OfficeBuildingHelper.CalculateResourceEffect(buildingID, ref building, (ImmaterialResourceManager.Resource)i);
                                 maxEffect = OfficeBuildingHelper.GetMaxEffect((ImmaterialResourceManager.Resource)i);
                                 break;
                             default:
@@ -575,37 +594,37 @@ namespace ShowIt2
 
                     //ResetAllCharts();
             */
-                    switch (building.Info.m_class.GetZone())
-                    {
-                        case ItemClass.Zone.ResidentialHigh:
-                        case ItemClass.Zone.ResidentialLow:
-                            //ShowResidentialCharts();
-                            ShowResidentialProgress(buildingId, ref building);
-                            break;
-                        case ItemClass.Zone.Industrial:
-                            //ShowIndustrialCharts();
-                            ShowIndustrialProgress(buildingId, ref building);
-                            break;
-                        case ItemClass.Zone.CommercialHigh:
-                        case ItemClass.Zone.CommercialLow:
-                            //ShowCommercialCharts();
-                            ShowCommercialProgress(buildingId, ref building);
-                            break;
-                        case ItemClass.Zone.Office:
-                            //ShowOfficeCharts();
-                            ShowOfficeProgress(buildingId, ref building);
-                            break;
-                        default:
+            switch (building.Info.m_class.GetZone())
+            {
+                case ItemClass.Zone.ResidentialHigh:
+                case ItemClass.Zone.ResidentialLow:
+                    //ShowResidentialCharts();
+                    ShowResidentialProgress(buildingID, ref building);
+                    break;
+                case ItemClass.Zone.Industrial:
+                    //ShowIndustrialCharts();
+                    ShowIndustrialProgress(buildingID, ref building);
+                    break;
+                case ItemClass.Zone.CommercialHigh:
+                case ItemClass.Zone.CommercialLow:
+                    //ShowCommercialCharts();
+                    ShowCommercialProgress(buildingID, ref building);
+                    break;
+                case ItemClass.Zone.Office:
+                    //ShowOfficeCharts();
+                    ShowOfficeProgress(buildingID, ref building);
+                    break;
+                default:
 
-                            break;
-                    }
+                    break;
+            }
 
-                    //_cachedBuildingID = buildingId;
-                //}
+            //_cachedBuildingID = buildingID;
+            //}
             //}
             //catch (Exception e)
             //{
-                //Debug.Log("[Show It!] ModManager:RefreshData -> Exception: " + e.Message);
+            //Debug.Log("[Show It!] ModManager:RefreshData -> Exception: " + e.Message);
             //}
         }
 
@@ -816,78 +835,59 @@ namespace ShowIt2
             }
         }
 
-        private string GetIndicatorName(ImmaterialResourceManager.Resource resource)
+        private static readonly Dictionary<ImmaterialResourceManager.Resource, string> LABELS = new Dictionary<ImmaterialResourceManager.Resource, string>
+		{
+			{ ImmaterialResourceManager.Resource.HealthCare,            LocaleID.INFO_HEALTH_HEALTHCARE },
+			{ ImmaterialResourceManager.Resource.FireDepartment,        LocaleID.INFO_FIRE_TITLE },
+			{ ImmaterialResourceManager.Resource.PoliceDepartment,      LocaleID.INFO_CRIMERATE_COVERAGE },
+			{ ImmaterialResourceManager.Resource.EducationElementary,   LocaleID.INFO_EDUCATION_ELEMENTARY },
+			{ ImmaterialResourceManager.Resource.EducationHighSchool,   LocaleID.INFO_EDUCATION_HIGH },
+			{ ImmaterialResourceManager.Resource.EducationUniversity,   LocaleID.INFO_EDUCATION_UNIVERSITY },
+			{ ImmaterialResourceManager.Resource.DeathCare,             LocaleID.INFO_HEALTH_DEATHCARE },
+			{ ImmaterialResourceManager.Resource.PublicTransport,       "Public Transport" }, // INFO_PUBLICTRANSPORT_TITLE
+			{ ImmaterialResourceManager.Resource.NoisePollution,        LocaleID.INFO_NOISEPOLLUTION_TITLE },
+			{ ImmaterialResourceManager.Resource.CrimeRate,             LocaleID.INFO_CRIMERATE_METER },
+			{ ImmaterialResourceManager.Resource.Health,                LocaleID.INFO_HEALTH_AVERAGE }, // INFO_HEALTH_HEALTH
+			{ ImmaterialResourceManager.Resource.Wellbeing,             LocaleID.INFO_HAPPINESS_TITLE },
+			{ ImmaterialResourceManager.Resource.Density,               LocaleID.INFO_POPULATION_DENSITY },
+			{ ImmaterialResourceManager.Resource.Entertainment,         LocaleID.INFO_ENTERTAINMENT_TITLE },
+			{ ImmaterialResourceManager.Resource.LandValue,             LocaleID.INFO_LANDVALUE_TITLE },
+			{ ImmaterialResourceManager.Resource.Attractiveness,        LocaleID.INFO_TOURISM_ATTRACTIVENESS },
+			{ ImmaterialResourceManager.Resource.Coverage,              LocaleID.INFO_FIRE_COVERAGE }, // not sure what this is
+			{ ImmaterialResourceManager.Resource.FireHazard,            LocaleID.INFO_FIRE_METER }, // fire meter says "fire hazard"
+			{ ImmaterialResourceManager.Resource.Abandonment,           LocaleID.BUILDING_STATUS_ABANDONED }, // there is no ui for that CHIRP_ABANDONED_BUILDINGS
+			{ ImmaterialResourceManager.Resource.CargoTransport,        "Cargo Transport" }, // INFO_PUBLICTRANSPORT_TITLE
+			{ ImmaterialResourceManager.Resource.RadioCoverage,         LocaleID.INFO_RADIO_SIGNAL }, // INFO_RADIO_BUILDINGS radio masts, INFO_RADIO_SIGNAL signal strength
+			{ ImmaterialResourceManager.Resource.FirewatchCoverage,     "Firewatch Coverage" }, // INFO_FIRE_COVERAGE firefighter efficiency
+			{ ImmaterialResourceManager.Resource.EarthquakeCoverage,    LocaleID.INFO_DETECTION_COVERAGE }, // earthquake detection
+			{ ImmaterialResourceManager.Resource.DisasterCoverage,      "Disaster Coverage" }, // INFO_DISASTERRISK_DISASTERRISK distaster risk
+			{ ImmaterialResourceManager.Resource.TourCoverage,          LocaleID.INFO_TOURS_TITLE },
+			{ ImmaterialResourceManager.Resource.PostService,           LocaleID.INFO_POST_TITLE },
+			{ ImmaterialResourceManager.Resource.EducationLibrary,      LocaleID.INFO_EDUCATION_LIBRARY },
+			{ ImmaterialResourceManager.Resource.ChildCare,             LocaleID.INFO_HEALTH_CHILDCARE },
+			{ ImmaterialResourceManager.Resource.ElderCare,             LocaleID.INFO_HEALTH_ELDERCARE },
+			{ ImmaterialResourceManager.Resource.CashCollecting,        LocaleID.INFO_FINANCIAL_CASHCOLLECTINGCOVERAGE },
+			{ ImmaterialResourceManager.Resource.TaxBonus,              LocaleID.INFO_FINANCIAL_TAXBONUS },
+			{ ImmaterialResourceManager.Resource.Sightseeing,           LocaleID.INFO_HOTEL_SIGHTSEEING },
+			{ ImmaterialResourceManager.Resource.Shopping,              LocaleID.INFO_HOTEL_SHOPPING },
+			{ ImmaterialResourceManager.Resource.Business,              LocaleID.INFO_HOTEL_BUSINESS },
+			{ ImmaterialResourceManager.Resource.Nature,                LocaleID.INFO_HOTEL_NATURE },
+			{ ImmaterialResourceManager.Resource.None,                  LocaleID.INFO_NONE },
+            {                                    WaterProximity,        LocaleID.INFO_WATER_TITLE },
+			{                                    GroundPollution,       LocaleID.INFO_POLLUTION_TITLE },
+		};
+
+        private string GetResourceName(ImmaterialResourceManager.Resource resource)
         {
             switch (resource)
             {
-                case ImmaterialResourceManager.Resource.HealthCare:
-                    return "Health Care";
-                case ImmaterialResourceManager.Resource.FireDepartment:
-                    return "Fire Department";
-                case ImmaterialResourceManager.Resource.PoliceDepartment:
-                    return "Police Department";
-                case ImmaterialResourceManager.Resource.EducationElementary:
-                    return "Elementary";
-                case ImmaterialResourceManager.Resource.EducationHighSchool:
-                    return "High School";
-                case ImmaterialResourceManager.Resource.EducationUniversity:
-                    return "University";
-                case ImmaterialResourceManager.Resource.DeathCare:
-                    return "Death Care";
                 case ImmaterialResourceManager.Resource.PublicTransport:
-                    return "Public Transport";
-                case ImmaterialResourceManager.Resource.NoisePollution:
-                    return "Noise Pollution";
-                case ImmaterialResourceManager.Resource.CrimeRate:
-                    return "Crime Rate";
-                case ImmaterialResourceManager.Resource.Health:
-                    return "Health";
-                case ImmaterialResourceManager.Resource.Wellbeing:
-                    return "Wellbeing";
-                case ImmaterialResourceManager.Resource.Density:
-                    return "Density";
-                case ImmaterialResourceManager.Resource.Entertainment:
-                    return "Entertainment";
-                case ImmaterialResourceManager.Resource.LandValue:
-                    return "Land Value";
-                case ImmaterialResourceManager.Resource.Attractiveness:
-                    return "Attractiveness";
-                case ImmaterialResourceManager.Resource.Coverage:
-                    return "Coverage";
-                case ImmaterialResourceManager.Resource.FireHazard:
-                    return "Fire Hazard";
-                case ImmaterialResourceManager.Resource.Abandonment:
-                    return "Abandonment";
                 case ImmaterialResourceManager.Resource.CargoTransport:
-                    return "Cargo Transport";
-                case ImmaterialResourceManager.Resource.RadioCoverage:
-                    return "Radio Coverage";
                 case ImmaterialResourceManager.Resource.FirewatchCoverage:
-                    return "Firewatch Coverage";
-                case ImmaterialResourceManager.Resource.EarthquakeCoverage:
-                    return "Earthquake Coverage";
                 case ImmaterialResourceManager.Resource.DisasterCoverage:
-                    return "Disaster Coverage";
-                case ImmaterialResourceManager.Resource.TourCoverage:
-                    return "Tour Coverage";
-                case ImmaterialResourceManager.Resource.PostService:
-                    return "Post Service";
-                case ImmaterialResourceManager.Resource.EducationLibrary:
-                    return "Library";
-                case ImmaterialResourceManager.Resource.ChildCare:
-                    return "Child Care";
-                case ImmaterialResourceManager.Resource.ElderCare:
-                    return "Elder Care";
-                case ImmaterialResourceManager.Resource.CashCollecting:
-                    return "Cash Collecting";
-                case ImmaterialResourceManager.Resource.TaxBonus:
-                    return "Tax Bonus";
-                case GroundPollution:
-                    return "Ground Pollution";
-                case ImmaterialResourceManager.Resource.None:
-                    return "None";
+                    return LABELS[resource];
                 default:
-                    return "Unknown";
+                    return Locale.Get(LABELS[resource]);
             }
         }
 
@@ -1183,13 +1183,13 @@ namespace ShowIt2
             int waterValue = ShowLandValue(buildingId, ref building);
 
             // show it!
-            _progTopName.text = "Education";
+            _progTopName.text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
             _progTopName.tooltip = "[Level 1]  ..14 | 15..29 | 30..44 | 45..59 | 60..  [Level 5]" + Environment.NewLine + // Infixo todo: change to slider
                 $"Populace: Children {building.m_children} Teens {building.m_teens} Youngs {building.m_youngs} Adults {building.m_adults} Seniors {building.m_seniors}" + Environment.NewLine +
                 $"Education: Low {building.m_education1} Medium {building.m_education2} High {building.m_education3}";
             _progTopProgress.text = progressTop.ToString();
             _progTopValue.text = education.ToString();
-            _progBotName.text = "Land value";
+            _progBotName.text = Locale.Get(LocaleID.INFO_LANDVALUE_TITLE);
             _progBotName.tooltip = "[Level 1]   ..5 |  6..20 | 21..40 | 41..60 | 61..  [Level 5]"; // Infixo todo: change to slider
             _progBotProgress.text = progressBot.ToString();
             _progBotValue.text = local.ToString();
@@ -1311,7 +1311,7 @@ namespace ShowIt2
             num -= ImmaterialResourceManager.CalculateResourceEffect(groundPollution, 50, 255, 50, 100) / 6; // Infixo todo: missing, there is no resource effect for that
 
             // debug check
-            Debug.Log($"ShowIt2.CalculateServiceValueIndustrial, buildingID={buildingID}, original={num}, new={value}, same? {value == num}");
+            //Debug.Log($"ShowIt2.CalculateServiceValueIndustrial, buildingID={buildingID}, original={num}, new={value}, same? {value == num}");
 
             return value;
         }
@@ -1342,12 +1342,12 @@ namespace ShowIt2
             int service = CalculateServiceValueIndustrial(buildingId, ref building);
 
             // show it!
-            _progTopName.text = "Education";
+            _progTopName.text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
             _progTopName.tooltip = "[Level 1]  ..14 | 15..29 | 30..  [Level 3]" + Environment.NewLine + // Infixo todo: change to slider
                 $"Workers: {aliveWorkerCount}, Education: Low {behaviour.m_educated1Count} Medium {behaviour.m_educated2Count} High {behaviour.m_educated3Count}";
             _progTopProgress.text = progressTop.ToString();
             _progTopValue.text = education.ToString();
-            _progBotName.text = "Services";
+            _progBotName.text = Locale.Get(LocaleID.POLICY_SERVICES);
             _progBotName.tooltip = "[Level 1]  ..29 | 30..59 | 60..  [Level 3]"; // Infixo todo: change to slider
             _progBotProgress.text = progressBot.ToString();
             _progBotValue.text = service.ToString();
@@ -1409,7 +1409,7 @@ namespace ShowIt2
                 $"Visitors: {aliveCount}, Wealth: Low {behaviour.m_wealth1Count} Medium {behaviour.m_wealth2Count} High {behaviour.m_wealth3Count}";
             _progTopProgress.text = progressTop.ToString();
             _progTopValue.text = wealth.ToString();
-            _progBotName.text = "Land value";
+            _progBotName.text = Locale.Get(LocaleID.INFO_LANDVALUE_TITLE);
             _progBotName.tooltip = "[Level 1]  ..20 | 21..40 | 41..  [Level 3]"; // Infixo todo: change to slider
             _progBotProgress.text = progressBot.ToString();
             _progBotValue.text = local.ToString();
@@ -1517,12 +1517,12 @@ namespace ShowIt2
             num -= ImmaterialResourceManager.CalculateResourceEffect(groundPollution, 50, 255, 50, 100) / 4;
 
             // debug check
-            Debug.Log($"ShowIt2.CalculateServiceValueOffice, buildingID={buildingID}, original={num}, new={value}, same? {value == num}");
+            //Debug.Log($"ShowIt2.CalculateServiceValueOffice, buildingID={buildingID}, original={num}, new={value}, same? {value == num}");
 
             return value;
         }
 
-        private void ShowOfficeProgress(ushort buildingId, ref Building building)
+        private void ShowOfficeProgress(ushort buildingID, ref Building building)
         {
             // extract progress info, reverse:
             // buildingData.m_levelUpProgress = (byte)(educationProgress | (serviceProgress << 4));
@@ -1535,9 +1535,9 @@ namespace ShowIt2
             int totalWorkerCount = 0;
             CommonBuildingAI buildingAI = (CommonBuildingAI)building.Info.m_buildingAI;
             if (ShowIt2Patcher.patched)
-                CommonBuildingAI_Patches.GetWorkBehaviour_Reverse(buildingAI, buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
+                CommonBuildingAI_Patches.GetWorkBehaviour_Reverse(buildingAI, buildingID, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
             else
-                GetWorkBehaviour(buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
+                GetWorkBehaviour(buildingID, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
             int education = behaviour.m_educated1Count + behaviour.m_educated2Count * 2 + behaviour.m_educated3Count * 3;
             if (aliveWorkerCount != 0)
             {
@@ -1545,15 +1545,15 @@ namespace ShowIt2
             }
 
             // service coverage
-            int service = CalculateServiceValueOffice(buildingId, ref building);
+            int service = CalculateServiceValueOffice(buildingID, ref building);
 
             // show it!
-            _progTopName.text = "Education";
+            _progTopName.text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
             _progTopName.tooltip = "[Level 1]  ..14 | 15..29 | 30..  [Level 3]" + Environment.NewLine + // Infixo todo: change to slider
                 $"Workers: {aliveWorkerCount}, Education: Low {behaviour.m_educated1Count} Medium {behaviour.m_educated2Count} High {behaviour.m_educated3Count}";
             _progTopProgress.text = progressTop.ToString();
             _progTopValue.text = education.ToString();
-            _progBotName.text = "Services";
+            _progBotName.text = Locale.Get(LocaleID.POLICY_SERVICES);
             _progBotName.tooltip = "[Level 1]  ..44 | 45..89 | 90..  [Level 3]"; // Infixo todo: change to slider
             _progBotProgress.text = progressBot.ToString();
             _progBotValue.text = service.ToString();
@@ -1606,7 +1606,7 @@ namespace ShowIt2
             // if water < 33 then proportional to 300, if > 33 then reverse proportional i.e. 0 -> 300 -> 0
             // ideal water adds +30 $$
             int waterValue = realValue - value;
-            Debug.Log($"ShowIt2.ShowLandValue: value={value} real={realValue} water={waterValue}");
+            //Debug.Log($"ShowIt2.ShowLandValue: value={value} real={realValue} water={waterValue}");
             return waterValue;
         }
     }

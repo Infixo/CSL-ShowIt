@@ -114,7 +114,7 @@ namespace ShowIt2
     {
         private const float DEFAULT_SCALE = 0.8f;
         private const float TEXT_WIDTH = 45f + 120f * DEFAULT_SCALE;
-        private const float VALUE_WIDTH = 7f + 16f * DEFAULT_SCALE;
+        private const float VALUE_WIDTH = 6f + 18f * DEFAULT_SCALE;
         public const float DEFAULT_HEIGHT = 1f + 17f * DEFAULT_SCALE;
         // internals
         private Color m_negativeColor = Color.red;

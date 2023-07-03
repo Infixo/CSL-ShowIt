@@ -6,8 +6,9 @@ namespace ShowIt2
 {
     public class Loading : LoadingExtensionBase
     {
-        private GameObject _modManagerGameObject;
+        private static GameObject _modManagerGameObject;
         private LoadMode _loadMode;
+        public static ModManager Manager { get { return _modManagerGameObject.GetComponent<ModManager>(); } }
 
         public override void OnLevelLoaded(LoadMode mode)
         {

@@ -1,6 +1,7 @@
 ﻿using ICities;
 using System;
 using System.Reflection;
+using ColossalFramework.UI;
 using CitiesHarmony.API;
 
 namespace ShowIt2
@@ -20,19 +21,19 @@ namespace ShowIt2
             if (HarmonyHelper.IsHarmonyInstalled) ShowIt2Patcher.UnpatchAll();
         }
 
-        private static readonly string[] IndicatorsPanelAlignmentLabels =
+        private static readonly string[] PanelAlignmentLabels =
         {
             "Right",
             "Bottom"
         };
 
-        private static readonly string[] IndicatorsPanelAlignmentValues =
+        private static readonly string[] PanelAlignmentValues =
         {
             "Right",
             "Bottom"
         };
 
-        private static readonly string[] IndicatorsPanelLegendLabels =
+        /*private static readonly string[] IndicatorsPanelLegendLabels =
          {
             "Icons",
             "Labels",
@@ -44,7 +45,9 @@ namespace ShowIt2
             "Icons",
             "Labels",
             "Both"
-        };
+        };*/
+
+        private UITextField m_uiText;
 
         public void OnSettingsUI(UIHelperBase helper)
         {
@@ -57,35 +60,42 @@ namespace ShowIt2
             int selectedIndex;
             float selectedValue;
 
-            selectedIndex = GetSelectedOptionIndex(IndicatorsPanelAlignmentValues, ModConfig.Instance.IndicatorsPanelAlignment);
-            group.AddDropdown("Alignment", IndicatorsPanelAlignmentLabels, selectedIndex, sel =>
+            selectedIndex = GetSelectedOptionIndex(PanelAlignmentValues, ModConfig.Instance.Alignment);
+            group.AddDropdown("Alignment", PanelAlignmentLabels, selectedIndex, sel =>
             {
-                ModConfig.Instance.IndicatorsPanelAlignment = IndicatorsPanelAlignmentValues[sel];
+                ModConfig.Instance.Alignment = PanelAlignmentValues[sel];
                 ModConfig.Instance.Save();
             });
 
-            selectedValue = ModConfig.Instance.IndicatorsPanelChartSize;
-            group.AddSlider("Chart Size", 35f, 65f, 0.5f, selectedValue, sel =>
+            m_uiText = (UITextField)group.AddTextfield("Panel", "", callback => { return; });
+            m_uiText.isEnabled = false; // removes an outline and makes it read-only
+
+            selectedValue = ModConfig.Instance.Scaling;
+            group.AddSlider("Scaling", 0.5f, 1.5f, 0.1f, selectedValue, sel =>
             {
-                ModConfig.Instance.IndicatorsPanelChartSize = sel;
+                ModConfig.Instance.Scaling = sel;
+                m_uiText.text = $"scaling={ModConfig.Instance.Scaling} spacing={ModConfig.Instance.Spacing}";
                 ModConfig.Instance.Save();
             });
 
-            selectedValue = ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing;
+            /*selectedValue = ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing;
             group.AddSlider("Chart Horizontal Spacing", 5f, 25f, 1f, selectedValue, sel =>
             {
                 ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing = sel;
                 ModConfig.Instance.Save();
-            });
+            });*/
 
-            selectedValue = ModConfig.Instance.IndicatorsPanelChartVerticalSpacing;
-            group.AddSlider("Chart Vertical Spacing", 5f, 25f, 1f, selectedValue, sel =>
+            selectedValue = ModConfig.Instance.Spacing;
+            group.AddSlider("Chart Vertical Spacing", 0f, 5f, 1f, selectedValue, sel =>
             {
-                ModConfig.Instance.IndicatorsPanelChartVerticalSpacing = sel;
+                ModConfig.Instance.Spacing = sel;
+                m_uiText.text = $"scaling={ModConfig.Instance.Scaling} spacing={ModConfig.Instance.Spacing}";
                 ModConfig.Instance.Save();
             });
 
-            selectedValue = ModConfig.Instance.IndicatorsPanelNumberTextScale;
+            m_uiText.text = $"scaling={ModConfig.Instance.Scaling} spacing={ModConfig.Instance.Spacing}";
+
+            /*selectedValue = ModConfig.Instance.IndicatorsPanelNumberTextScale;
             group.AddSlider("Number Text Scale", 0.5f, 0.9f, 0.05f, selectedValue, sel =>
             {
                 ModConfig.Instance.IndicatorsPanelNumberTextScale = sel;
@@ -111,7 +121,7 @@ namespace ShowIt2
             {
                 ModConfig.Instance.IndicatorsPanelLabelTextScale = sel;
                 ModConfig.Instance.Save();
-            });
+            });*/
         }
 
         private int GetSelectedOptionIndex(string[] option, string value)

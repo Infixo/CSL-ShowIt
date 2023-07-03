@@ -4,15 +4,15 @@
     public class ModConfig
     {
         public bool ConfigUpdated { get; set; }
-        public bool ShowIndicators { get; set; } = true;
-        public string IndicatorsPanelAlignment { get; set; } = "Right";
-        public float IndicatorsPanelChartSize { get; set; } = 50f;
-        public float IndicatorsPanelChartHorizontalSpacing { get; set; } = 15f;
-        public float IndicatorsPanelChartVerticalSpacing { get; set; } = 15f;
-        public float IndicatorsPanelNumberTextScale { get; set; } = 0.7f;
-        public string IndicatorsPanelLegend { get; set; } = "Icons";
-        public float IndicatorsPanelIconSize { get; set; } = 25f;
-        public float IndicatorsPanelLabelTextScale { get; set; } = 0.6f;
+        public bool ShowPanel { get; set; } = true;
+        public string Alignment { get; set; } = "Right";
+        public float Scaling { get; set; } = 0.8f;
+        //public float IndicatorsPanelChartHorizontalSpacing { get; set; } = 15f;
+        public float Spacing { get; set; } = 2f;
+        //public float IndicatorsPanelNumberTextScale { get; set; } = 0.7f;
+        //public string IndicatorsPanelLegend { get; set; } = "Icons";
+        //public float IndicatorsPanelIconSize { get; set; } = 25f;
+        //public float IndicatorsPanelLabelTextScale { get; set; } = 0.6f;
 
         private static ModConfig instance;
 
