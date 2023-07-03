@@ -1,6 +1,6 @@
 ﻿using ColossalFramework;
 
-namespace ShowIt
+namespace ShowIt2
 {
     public static class ResidentialBuildingHelper
     {

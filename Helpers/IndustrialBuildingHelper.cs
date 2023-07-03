@@ -1,8 +1,8 @@
 ﻿using ColossalFramework;
 
-namespace ShowIt
+namespace ShowIt2
 {
-    public static class CommercialBuildingHelper
+    public static class IndustrialBuildingHelper
     {
         public static int CalculateResourceEffect(ushort buildingID, ref Building data, ImmaterialResourceManager.Resource resource)
         {
@@ -62,8 +62,6 @@ namespace ShowIt
                 case ImmaterialResourceManager.Resource.ChildCare:
                 case ImmaterialResourceManager.Resource.ElderCare:
                 case ImmaterialResourceManager.Resource.CashCollecting:
-                    Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(resource, data.m_position, out value);
-                    return ImmaterialResourceManager.CalculateResourceEffect(value, 50, 100, 20, 25);
                 case ImmaterialResourceManager.Resource.TaxBonus:
                 case ImmaterialResourceManager.Resource.None:
                     return 0;
@@ -98,7 +96,7 @@ namespace ShowIt
                 case ImmaterialResourceManager.Resource.Attractiveness:
                 case ImmaterialResourceManager.Resource.Coverage:
                 case ImmaterialResourceManager.Resource.FireHazard:
-                    return 50;
+                    return 0;
                 case ImmaterialResourceManager.Resource.Abandonment:
                     return 20;
                 case ImmaterialResourceManager.Resource.CargoTransport:
@@ -119,7 +117,6 @@ namespace ShowIt
                 case ImmaterialResourceManager.Resource.ChildCare:
                 case ImmaterialResourceManager.Resource.ElderCare:
                 case ImmaterialResourceManager.Resource.CashCollecting:
-                    return 25;
                 case ImmaterialResourceManager.Resource.TaxBonus:
                 case ImmaterialResourceManager.Resource.None:
                     return 0;

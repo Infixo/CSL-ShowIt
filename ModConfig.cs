@@ -1,4 +1,4 @@
-﻿namespace ShowIt
+﻿namespace ShowIt2
 {
     [ConfigurationPath("ShowItConfig.xml")]
     public class ModConfig

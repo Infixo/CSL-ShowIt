@@ -2,7 +2,7 @@
 using System;
 using UnityEngine;
 
-namespace ShowIt
+namespace ShowIt2
 {
     public class Loading : LoadingExtensionBase
     {

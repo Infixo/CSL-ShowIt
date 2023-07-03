@@ -1,8 +1,8 @@
 ﻿using ColossalFramework;
 
-namespace ShowIt
+namespace ShowIt2
 {
-    public static class OfficeBuildingHelper
+    public static class CommercialBuildingHelper
     {
         public static int CalculateResourceEffect(ushort buildingID, ref Building data, ImmaterialResourceManager.Resource resource)
         {
@@ -40,7 +40,8 @@ namespace ShowIt
                     Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(resource, data.m_position, out value);
                     return ImmaterialResourceManager.CalculateResourceEffect(value, 15, 50, 10, 20);
                 case ImmaterialResourceManager.Resource.CargoTransport:
-                    return 0;
+                    Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(resource, data.m_position, out value);
+                    return ImmaterialResourceManager.CalculateResourceEffect(value, 100, 500, 50, 100);
                 case ImmaterialResourceManager.Resource.RadioCoverage:
                     Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(resource, data.m_position, out value);
                     return ImmaterialResourceManager.CalculateResourceEffect(value, 50, 100, 20, 25);
@@ -61,6 +62,8 @@ namespace ShowIt
                 case ImmaterialResourceManager.Resource.ChildCare:
                 case ImmaterialResourceManager.Resource.ElderCare:
                 case ImmaterialResourceManager.Resource.CashCollecting:
+                    Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(resource, data.m_position, out value);
+                    return ImmaterialResourceManager.CalculateResourceEffect(value, 50, 100, 20, 25);
                 case ImmaterialResourceManager.Resource.TaxBonus:
                 case ImmaterialResourceManager.Resource.None:
                     return 0;
@@ -95,7 +98,7 @@ namespace ShowIt
                 case ImmaterialResourceManager.Resource.Attractiveness:
                 case ImmaterialResourceManager.Resource.Coverage:
                 case ImmaterialResourceManager.Resource.FireHazard:
-                    return 0;
+                    return 50;
                 case ImmaterialResourceManager.Resource.Abandonment:
                     return 20;
                 case ImmaterialResourceManager.Resource.CargoTransport:
@@ -116,6 +119,7 @@ namespace ShowIt
                 case ImmaterialResourceManager.Resource.ChildCare:
                 case ImmaterialResourceManager.Resource.ElderCare:
                 case ImmaterialResourceManager.Resource.CashCollecting:
+                    return 25;
                 case ImmaterialResourceManager.Resource.TaxBonus:
                 case ImmaterialResourceManager.Resource.None:
                     return 0;

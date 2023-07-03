@@ -1,8 +1,8 @@
 ﻿using ColossalFramework;
 
-namespace ShowIt
+namespace ShowIt2
 {
-    public static class IndustrialBuildingHelper
+    public static class OfficeBuildingHelper
     {
         public static int CalculateResourceEffect(ushort buildingID, ref Building data, ImmaterialResourceManager.Resource resource)
         {
@@ -40,8 +40,7 @@ namespace ShowIt
                     Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(resource, data.m_position, out value);
                     return ImmaterialResourceManager.CalculateResourceEffect(value, 15, 50, 10, 20);
                 case ImmaterialResourceManager.Resource.CargoTransport:
-                    Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(resource, data.m_position, out value);
-                    return ImmaterialResourceManager.CalculateResourceEffect(value, 100, 500, 50, 100);
+                    return 0;
                 case ImmaterialResourceManager.Resource.RadioCoverage:
                     Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(resource, data.m_position, out value);
                     return ImmaterialResourceManager.CalculateResourceEffect(value, 50, 100, 20, 25);

@@ -2,7 +2,7 @@
 using System;
 using System.Reflection;
 
-namespace ShowIt
+namespace ShowIt2
 {
     public class ModInfo : IUserMod
     {

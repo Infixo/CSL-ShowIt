@@ -4,7 +4,7 @@ using System.Reflection.Emit;
 using UnityEngine;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace ShowIt
+namespace ShowIt2
 {
     public class UIUtils
         // Infixo todo: create slider for showing progress with level tresholds
@@ -164,7 +164,7 @@ namespace ShowIt
             {
                 if (value <= 0f)
                 {
-                    Debug.Log("ShowIt.UIServiceBar.MaxValue: warning, trying to set MaxValue to <= 0!");
+                    Debug.Log("ShowIt2.UIServiceBar.MaxValue: warning, trying to set MaxValue to <= 0!");
                     return;
                 }
                 m_maxValue = value;
@@ -184,7 +184,7 @@ namespace ShowIt
             {
                 if (value <= 0f)
                 {
-                    Debug.Log("ShowIt.UIServiceBar.Limit: warning, trying to set Limit to <= 0!");
+                    Debug.Log("ShowIt2.UIServiceBar.Limit: warning, trying to set Limit to <= 0!");
                     return;
                 }
                 m_limit = value;

@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ShowIt (Infixo)")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("ShowIt2")]
+[assembly: AssemblyDescription("Cities Skylines mod")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("ShowIt")]
-[assembly: AssemblyCopyright("Copyright ©  2023")]
+[assembly: AssemblyProduct("ShowIt2")]
+[assembly: AssemblyCopyright("Copyright © 2023 Infixo")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
