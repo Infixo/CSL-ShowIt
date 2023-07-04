@@ -1,16 +1,16 @@
-﻿using ColossalFramework.UI;
-using System.ComponentModel;
-using System.Reflection.Emit;
-using UnityEngine;
-using static System.Net.Mime.MediaTypeNames;
+﻿using UnityEngine;
+using ColossalFramework.UI;
+//using System.ComponentModel;
+//using System.Reflection.Emit;
+//using static System.Net.Mime.MediaTypeNames;
 
 namespace ShowIt2
 {
-    public class UIUtils
+    //public class UIUtils
         // Infixo todo: create slider for showing progress with level tresholds
         // Infixo todo: create slider for showing value of the immaterial resource effect
-    {
-        public static UIFont GetUIFont(string name)
+    //{
+        /*public static UIFont GetUIFont(string name)
         {
             UIFont[] fonts = Resources.FindObjectsOfTypeAll<UIFont>();
 
@@ -23,68 +23,37 @@ namespace ShowIt2
             }
 
             return null;
-        }
+        }*/
 
-        public static UIPanel CreatePanel(UIComponent parent, string name)
+        /*public static UIPanel CreatePanel(UIComponent parent, string name)
         {
             UIPanel panel = parent.AddUIComponent<UIPanel>();
             panel.name = name;
 
             return panel;
-        }
+        }*/
 
-        public static UISprite CreateSprite(UIComponent parent, string name, string spriteName)
+        /*public static UISprite CreateSprite(UIComponent parent, string name, string spriteName)
         {
             UISprite sprite = parent.AddUIComponent<UISprite>();
             sprite.name = name;
             sprite.spriteName = spriteName;
 
             return sprite;
-        }
+        }*/
 
-        public static UILabel CreateLabel(UIComponent parent, string name, string text)
+        /*public static UILabel CreateLabel(UIComponent parent, string name, string text)
         {
             UILabel label = parent.AddUIComponent<UILabel>();
-            label.textAlignment = UIHorizontalAlignment.Center; // Infixo: looks like a default for all labels
+            //label.textAlignment = UIHorizontalAlignment.Center; // Infixo: looks like a default for all labels
             label.name = name;
             label.text = text;
 
             return label;
-        }
+        }*/
 
-        public static UICheckBox CreateCheckBox(UIComponent parent, string name, string text, bool state)
-        {
-            UICheckBox checkBox = parent.AddUIComponent<UICheckBox>();
-            checkBox.name = name;
 
-            checkBox.height = 16f;
-            checkBox.width = parent.width - 10f;
-
-            UISprite uncheckedSprite = checkBox.AddUIComponent<UISprite>();
-            uncheckedSprite.spriteName = "check-unchecked";
-            uncheckedSprite.size = new Vector2(16f, 16f);
-            uncheckedSprite.relativePosition = Vector3.zero;
-
-            UISprite checkedSprite = checkBox.AddUIComponent<UISprite>();
-            checkedSprite.spriteName = "check-checked";
-            checkedSprite.size = new Vector2(16f, 16f);
-            checkedSprite.relativePosition = Vector3.zero;
-            checkBox.checkedBoxObject = checkedSprite;
-
-            checkBox.label = checkBox.AddUIComponent<UILabel>();
-            checkBox.label.text = text;
-            checkBox.label.font = GetUIFont("OpenSans-Regular");
-            checkBox.label.autoSize = false;
-            checkBox.label.height = 20f;
-            checkBox.label.verticalAlignment = UIVerticalAlignment.Middle;
-            checkBox.label.relativePosition = new Vector3(20f, 0f);
-
-            checkBox.isChecked = state;
-
-            return checkBox;
-        }
-
-        public static UIRadialChart CreateTwoSlicedRadialChart(UIComponent parent, string name)
+        /*public static UIRadialChart CreateTwoSlicedRadialChart(UIComponent parent, string name)
         {
             UIRadialChart radialChart = parent.AddUIComponent<UIRadialChart>();
             radialChart.name = name;
@@ -105,8 +74,8 @@ namespace ShowIt2
             slice1.innerColor = color1;
 
             return radialChart;
-        }
-    }
+        }*/
+    //}
 
     // UI control to show the service coverage using a progress bar
     // The value is shown propotionally to the max-value
@@ -147,24 +116,16 @@ namespace ShowIt2
 
         public float Value
         {
-            get { return m_value; }
-            set
-            {
-                m_value = value; UpdateControl();
-                //m_uiValueLabel.text = m_value.ToString();
-                //m_uiValueBar.value = Mathf.Max(0f, Mathf.Min(1f, m_value / m_maxValue)); // value sets the filled part, as 0.0f to 1.0f
-                //m_uiValueBar.progressColor = ( m_value < m_maxValue ? m_progressColor : m_completeColor );
-            }
+            set { m_value = value; UpdateControl(); }
         }
 
         public float MaxValue
         {
-            get { return m_maxValue; }
             set
             {
                 if (value <= 0f)
                 {
-                    Debug.Log("ShowIt2.UIServiceBar.MaxValue: warning, trying to set MaxValue to <= 0!");
+                    Debug.Log("ShowIt2.UIServiceBar.MaxValue: WARNING trying to set MaxValue to <= 0!");
                     return;
                 }
                 m_maxValue = value;
@@ -179,12 +140,11 @@ namespace ShowIt2
 
         public float Limit
         {
-            get { return m_limit; }
             set
             {
                 if (value <= 0f)
                 {
-                    Debug.Log("ShowIt2.UIServiceBar.Limit: warning, trying to set Limit to <= 0!");
+                    Debug.Log("ShowIt2.UIServiceBar.Limit: WARNING trying to set Limit to <= 0!");
                     return;
                 }
                 m_limit = value;
@@ -194,11 +154,7 @@ namespace ShowIt2
         
         public float Width
         {          
-            set 
-            { 
-                m_uiPanel.width = value;
-                UpdateControl();
-            }
+            set { m_uiPanel.width = value; UpdateControl(); }
         }
 
         public bool Negative 
@@ -271,13 +227,6 @@ namespace ShowIt2
             m_uiMaxValueLabel.textColor = (m_negative ? m_negativeColor : m_positiveColor);
             m_uiValueBar.progressColor = (m_negative ? m_negativeColor : (m_belowMid ? m_belowMidColor : m_progressColor));
             if (m_value >= m_maxValue && !m_negative) m_uiValueBar.progressColor = m_completeColor;
-            // disabled
-            //if (m_disabled)
-            //{
-                //m_uiTextLabel.textColor = m_disabledColor;
-                //m_uiValueLabel.textColor = m_disabledColor;
-                //m_uiMaxValueLabel.textColor = m_disabledColor;
-            //}
         }
     }
 }

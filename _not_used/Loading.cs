@@ -4,11 +4,12 @@ using UnityEngine;
 
 namespace ShowIt2
 {
+    
     public class Loading : LoadingExtensionBase
     {
         private static GameObject _modManagerGameObject;
         private LoadMode _loadMode;
-        public static ModManager Manager { get { return _modManagerGameObject.GetComponent<ModManager>(); } }
+        public static ShowIt2Panel Manager { get { return _modManagerGameObject.GetComponent<ShowIt2Panel>(); } }
 
         public override void OnLevelLoaded(LoadMode mode)
         {
@@ -22,7 +23,7 @@ namespace ShowIt2
                 }
 
                 _modManagerGameObject = new GameObject("ShowItModManager");
-                _modManagerGameObject.AddComponent<ModManager>();
+                _modManagerGameObject.AddComponent<ShowIt2Panel>();
             }
             catch (Exception e)
             {
@@ -50,4 +51,5 @@ namespace ShowIt2
             }
         }
     }
+    
 }

@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Reflection.Emit;
-using UnityEngine;
-using ColossalFramework;
-using ColossalFramework.Math;
-using ColossalFramework.Plugins;
+﻿using UnityEngine;
 using HarmonyLib;
 
 namespace ShowIt2
@@ -11,7 +6,7 @@ namespace ShowIt2
     public static class ShowIt2Patcher
     {
         public const string HarmonyId = "Infixo.ShowIt2";
-        public static bool patched = false;
+        private static bool patched = false;
 
         public static void PatchAll()
         {
@@ -79,14 +74,17 @@ namespace ShowIt2
             Debug.Log($"{ShowIt2Patcher.HarmonyId}.UpdateBindings_Postfix: id={buildingID}");
         }
         */
+        /*
         [HarmonyPostfix, HarmonyPatch("Start")]
         public static void Start_Postfix(ZonedBuildingWorldInfoPanel __instance)
         {
             // creates and initializes UI controls
-            ushort buildingID = WorldInfoPanel.GetCurrentInstanceID().Building;
-            Debug.Log($"{ShowIt2Patcher.HarmonyId}.Start_Postfix: id={buildingID} building={__instance.buildingName} component={__instance.component.name}");
+            //ushort buildingID = WorldInfoPanel.GetCurrentInstanceID().Building;
+            //Debug.Log($"{ShowIt2Patcher.HarmonyId}.Start_Postfix: id={buildingID} building={__instance.buildingName} component={__instance.component.name}");
             // Infixo.ShowIt2.Start_Postfix: id=0 building=Name component=(Library) ZonedBuildingWorldInfoPanel
+            //ShowIt2Mod.Panel.CreateUI(); // the object is not yet created here
         }
+        */
 
         [HarmonyPostfix, HarmonyPatch("OnSetTarget")]
         public static void OnSetTarget_Postfix(ZonedBuildingWorldInfoPanel __instance)
@@ -94,7 +92,7 @@ namespace ShowIt2
             ushort buildingID = WorldInfoPanel.GetCurrentInstanceID().Building;
             Debug.Log($"{ShowIt2Patcher.HarmonyId}.OnSetTarget_Postfix: id={buildingID} building={__instance.buildingName}");
             // Infixo.ShowIt2.OnSetTarget_Postfix: id=17609 building=Nylons Galore
-            Loading.Manager.OnSetTarget(buildingID);
+            ShowIt2Mod.Panel?.RefreshData(); // ?. is just a failsafe
         }
     }
 

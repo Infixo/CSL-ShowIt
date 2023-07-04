@@ -1,37 +1,27 @@
-﻿using ColossalFramework;
-using ColossalFramework.Globalization;
-//using ColossalFramework.Math;
-using ColossalFramework.UI;
-//using ICities;
-using System;
-//using System.CodeDom;
-//using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
-//using System.Security.AccessControl;
 using UnityEngine;
-//using UnityEngine.Experimental.Director;
-//using static Citizen;
-//using static ColossalFramework.DataBinding.BindPropertyByKey;
-//using static ImmaterialResourceManager;
-//using static System.Net.Mime.MediaTypeNames;
+using ColossalFramework;
+using ColossalFramework.UI;
+using ColossalFramework.Globalization;
 
 // Alias the Enum: You can create an alias for an existing enum by using the using directive. 
 using ImmaterialResource = ImmaterialResourceManager.Resource;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ShowIt2
 {
 
-    public class ModManager : MonoBehaviour
+    public class ShowIt2Panel : MonoBehaviour
     {
         public const ImmaterialResourceManager.Resource WaterProximity = (ImmaterialResourceManager.Resource)253; // Water proximity does not exists in IRM but it is used to calculate land value
         public const ImmaterialResourceManager.Resource GroundPollution = (ImmaterialResourceManager.Resource)254; // Ground Pollution does not exists in IRM but it is used to calculate service coverage value
 
-        private bool _initialized;
+        //private bool _initialized;
 
         private ZonedBuildingWorldInfoPanel m_uiZonedBuildingWorldInfoPanel;
-        private UIPanel _makeHistoricalPanel;
-        private UICheckBox _indicatorsCheckBox;
+        //private UIPanel _makeHistoricalPanel;
+        private UICheckBox m_showPanelCheckBox;
         private UIPanel m_uiMainPanel;
         // leveling progress - wealth, education section
         private UILabel _progTopName; // education or wealth
@@ -44,79 +34,62 @@ namespace ShowIt2
         private UILabel _progBotValue; // actual value number
         // Infixo: todo slider showing nicely the progress and tresholds for various levels
 
-        // service coverage
-        //private UILabel _header;
-        private Dictionary<int, UIRadialChart> _charts;
-        private Dictionary<int, UILabel> _numbers;
-        private Dictionary<int, UILabel> _maxVals; // Infixo: a set of labels showing max indicator values
-        private Dictionary<int, UISprite> _icons;
-        private Dictionary<int, UILabel> _labels;
-        private Dictionary<ImmaterialResourceManager.Resource, UIServiceBar> m_uiServices;
+        // resource value bars
+        private Dictionary<ImmaterialResourceManager.Resource, UIServiceBar> m_uiServices = new Dictionary<ImmaterialResourceManager.Resource, UIServiceBar>();
 
-        //private ushort _cachedBuildingID;
-        private Dictionary<int, float> _effectsOnZonedBuilding;
-        private Dictionary<int, float> _maxEffectsOnZonedBuilding;
 
-        private const int MaxNumberOfCharts = 17;
+        //private const int MaxNumberOfCharts = 17;
 
-        public void Awake()
+        /*public void Awake()
         {
             try
             {
-                _charts = new Dictionary<int, UIRadialChart>();
-                _numbers = new Dictionary<int, UILabel>();
-                _maxVals = new Dictionary<int, UILabel>();
-                _icons = new Dictionary<int, UISprite>();
-                _labels = new Dictionary<int, UILabel>();
-                m_uiServices = new Dictionary<ImmaterialResourceManager.Resource, UIServiceBar>();
+                //_charts = new Dictionary<int, UIRadialChart>();
+                //_numbers = new Dictionary<int, UILabel>();
+                //_maxVals = new Dictionary<int, UILabel>();
+                //_icons = new Dictionary<int, UISprite>();
+                //_labels = new Dictionary<int, UILabel>();
+                //m_uiServices = new Dictionary<ImmaterialResourceManager.Resource, UIServiceBar>();
 
-                _effectsOnZonedBuilding = new Dictionary<int, float>();
-                _maxEffectsOnZonedBuilding = new Dictionary<int, float>();
+                //_effectsOnZonedBuilding = new Dictionary<int, float>();
+                //_maxEffectsOnZonedBuilding = new Dictionary<int, float>();
             }
             catch (Exception e)
             {
-                Debug.Log("[Show It!] ModManager:Awake -> Exception: " + e.Message);
+                Debug.Log("[Show It!] ShowIt2Panel:Awake -> Exception: " + e.Message);
             }
-        }
+        }*/
 
         public void Start()
         {
-            try
-            {
-                m_uiZonedBuildingWorldInfoPanel = GameObject.Find("(Library) ZonedBuildingWorldInfoPanel").GetComponent<ZonedBuildingWorldInfoPanel>();
-                _makeHistoricalPanel = m_uiZonedBuildingWorldInfoPanel.Find("MakeHistoricalPanel").GetComponent<UIPanel>();
-
-                CreateUI();
-            }
-            catch (Exception e)
-            {
-                Debug.Log("[Show It!] ModManager:Start -> Exception: " + e.Message);
-            }
+            CreateUI();
         }
 
-        public void OnSetTarget(ushort buildingID)
+        /*public void OnSetTarget(ushort buildingID)
         {
+            
             ushort hackedID = ((InstanceID)m_uiZonedBuildingWorldInfoPanel
                     .GetType()
                     .GetField("m_InstanceID", BindingFlags.NonPublic | BindingFlags.Instance)
                     .GetValue(m_uiZonedBuildingWorldInfoPanel))
                     .Building;
-            Debug.Log($"ShowIt2.ModManager.OnSetTarget: passed id={buildingID} hacked id={hackedID}");
+            
+            //Debug.Log($"ShowIt2.ShowIt2Panel.OnSetTarget: passed id={buildingID} hacked id={hackedID}");
             if (m_uiMainPanel.isVisible)
                 RefreshData();
-        }
+        }*/
 
-        public void Update()
+        /*public void Update()
         {
             //try
             //{
-            if (!_initialized || ModConfig.Instance.ConfigUpdated)
-            {
-                UpdateUI();
+            //if (!_initialized || ShowIt2Config.Instance.ConfigUpdated)
+            //{
+                //UpdateUI();
 
-                _initialized = true;
-                ModConfig.Instance.ConfigUpdated = false;
-            }
+                //_initialized = true;
+                //ShowIt2Config.Instance.ConfigUpdated = false;
+            //}
 
             //if (m_uiZonedBuildingWorldInfoPanel.component.isVisible && m_uiMainPanel.isVisible)
             //{
@@ -129,15 +102,14 @@ namespace ShowIt2
             //}
             //catch (Exception e)
             //{
-            //Debug.Log("[Show It!] ModManager:Update -> Exception: " + e.Message);
+            //Debug.Log("[Show It!] ShowIt2Panel:Update -> Exception: " + e.Message);
             //}
-        }
+        }*/
 
-        public void OnDestroy()
+        /*public void OnDestroy()
         {
             //try
             //{
-            /*
             for (var i = 0; i < MaxNumberOfCharts; i++)
             {
                 Destroy(_charts[i]);
@@ -146,7 +118,6 @@ namespace ShowIt2
                 Destroy(_icons[i]);
                 Destroy(_labels[i]);
             }
-            */
             //if (_header != null)
             //{
             //Destroy(_header);
@@ -155,28 +126,55 @@ namespace ShowIt2
             {
                 Destroy(m_uiMainPanel);
             }
-            if (_indicatorsCheckBox != null)
+            if (m_showPanelCheckBox != null)
             {
-                Destroy(_indicatorsCheckBox);
+                Destroy(m_showPanelCheckBox);
             }
             // Infixo todo: add Destroy for other labels
             // Infixo todo: destroy service bars
             //}
             //catch (Exception e)
             //{
-            //Debug.Log("[Show It!] ModManager:OnDestroy -> Exception: " + e.Message);
+            //Debug.Log("[Show It!] ShowIt2Panel:OnDestroy -> Exception: " + e.Message);
             //}
+        }*/
+        private UICheckBox CreateCheckBox(UIComponent parent, string name, string text, bool state)
+        {
+            UICheckBox checkBox = parent.AddUIComponent<UICheckBox>();
+            checkBox.name = name;
+
+            checkBox.height = 16f;
+            checkBox.width = parent.width - 10f;
+
+            UISprite uncheckedSprite = checkBox.AddUIComponent<UISprite>();
+            uncheckedSprite.spriteName = "check-unchecked";
+            uncheckedSprite.size = new Vector2(16f, 16f);
+            uncheckedSprite.relativePosition = Vector3.zero;
+
+            UISprite checkedSprite = checkBox.AddUIComponent<UISprite>();
+            checkedSprite.spriteName = "check-checked";
+            checkedSprite.size = new Vector2(16f, 16f);
+            checkedSprite.relativePosition = Vector3.zero;
+            checkBox.checkedBoxObject = checkedSprite;
+
+            checkBox.label = checkBox.AddUIComponent<UILabel>();
+            checkBox.label.text = text;
+            //checkBox.label.font = GetUIFont("OpenSans-Regular");
+            checkBox.label.autoSize = false;
+            checkBox.label.height = 20f;
+            checkBox.label.verticalAlignment = UIVerticalAlignment.Middle;
+            checkBox.label.relativePosition = new Vector3(20f, 0f);
+
+            checkBox.isChecked = state;
+
+            return checkBox;
         }
 
         private void CreateUIServiceBar(UIComponent parent, int position, ImmaterialResourceManager.Resource resource)
         {
             UIServiceBar uiServiceBar = new UIServiceBar(parent, "ShowIt2" + resource.ToString() + "ServiceBar");
-            //parent.AttachUIComponent(uiServiceBar);
-            //BudgetItem budgetItem = uIComponent.GetComponent<BudgetItem>();
-            //UIServiceBar uiServiceBar = parent.GetComponent<UIServiceBar>();
             uiServiceBar.Width = 440f; // width of the parent is 0 atm
             uiServiceBar.Panel.relativePosition = new Vector3(10f, 60f + position * (UIServiceBar.DEFAULT_HEIGHT + 2f)); // Infixo todo: scaling
-            //uiServiceBar.Text = GetResourceName(resource);
             uiServiceBar.Text = GetResourceName(resource);
             uiServiceBar.Limit = 60f; // Biggest is Cargo 100, then Fire 50, others are <= 33
             uiServiceBar.MaxValue = 20f;
@@ -193,103 +191,63 @@ namespace ShowIt2
                 uiBar.Limit = limit;
         }
 
-        private void CreateUI()
+        public void CreateUI()
         {
-            //try
-            //{
+            m_uiZonedBuildingWorldInfoPanel = GameObject.Find("(Library) ZonedBuildingWorldInfoPanel").GetComponent<ZonedBuildingWorldInfoPanel>();
+
             m_uiMainPanel = m_uiZonedBuildingWorldInfoPanel.component.AddUIComponent<UIPanel>();
             m_uiMainPanel.name = "ShowIt2Panel";
-
             m_uiMainPanel.backgroundSprite = "SubcategoriesPanel";
             m_uiMainPanel.opacity = 0.90f;
             m_uiMainPanel.height = 60f + (UIServiceBar.DEFAULT_HEIGHT + 2f) * 24 + 10f;
             m_uiMainPanel.width = m_uiZonedBuildingWorldInfoPanel.component.width;
 
-            _indicatorsCheckBox = UIUtils.CreateCheckBox(_makeHistoricalPanel, "ShowItIndicatorsCheckBox", "Indicators", ModConfig.Instance.ShowPanel);
-            _indicatorsCheckBox.width = 110f;
-            _indicatorsCheckBox.label.textColor = new Color32(185, 221, 254, 255);
-            _indicatorsCheckBox.label.textScale = 0.8125f;
-            _indicatorsCheckBox.tooltip = "Indicators will show how well serviced the building is and what problems might prevent the building from leveling up.";
-            _indicatorsCheckBox.AlignTo(_makeHistoricalPanel, UIAlignAnchor.TopLeft);
-            _indicatorsCheckBox.relativePosition = new Vector3(_makeHistoricalPanel.width - _indicatorsCheckBox.width, 6f);
-            _indicatorsCheckBox.eventCheckChanged += (component, value) =>
+            // checkbox to toggle on/off the extra panel
+            UIPanel _makeHistoricalPanel = m_uiZonedBuildingWorldInfoPanel.Find("MakeHistoricalPanel").GetComponent<UIPanel>();
+            m_showPanelCheckBox = CreateCheckBox(_makeHistoricalPanel, "ShowIt2ShowPanelCheckBox", "Indicators", ShowIt2Config.Instance.ShowPanel);
+            m_showPanelCheckBox.width = 110f;
+            m_showPanelCheckBox.label.textColor = new Color32(185, 221, 254, 255);
+            m_showPanelCheckBox.label.textScale = 0.8125f;
+            m_showPanelCheckBox.tooltip = "Indicators will show how well serviced the building is and what problems might prevent the building from leveling up.";
+            m_showPanelCheckBox.AlignTo(_makeHistoricalPanel, UIAlignAnchor.TopLeft);
+            m_showPanelCheckBox.relativePosition = new Vector3(_makeHistoricalPanel.width - m_showPanelCheckBox.width, 6f);
+            m_showPanelCheckBox.eventCheckChanged += (component, value) =>
             {
                 m_uiMainPanel.isVisible = value;
-                ModConfig.Instance.ShowPanel = value;
-                ModConfig.Instance.Save();
+                ShowIt2Config.Instance.ShowPanel = value;
+                ShowIt2Config.Instance.Save();
+                UpdateUI();
             };
 
-            //_header = UIUtils.CreateLabel(m_uiMainPanel, "ShowItIndicatorsPanelHeader", "Service coverage");
-            //_header.font = UIUtils.GetUIFont("OpenSans-Regular");
-            //_header.textAlignment = UIHorizontalAlignment.Center;
-
-            // Infixo: new section showing leveling progress
             // leveling progress - wealth, education section
-            _progTopName = UIUtils.CreateLabel(m_uiMainPanel, "ShowItPanelProgTopName", "Education/Wealth"); // education or wealth
-            _progTopProgress = UIUtils.CreateLabel(m_uiMainPanel, "ShowItPanelProgTopProgress", "-1"); // number 1..15
-            _progTopValue = UIUtils.CreateLabel(m_uiMainPanel, "ShowItPanelProgTopValue", "-1"); // actual value number
+            _progTopName = m_uiMainPanel.AddUIComponent<UILabel>(); // label: "education" or "wealth"
+            _progTopName.name = "ShowIt2TopNameLabel";
+            _progTopProgress = m_uiMainPanel.AddUIComponent<UILabel>(); // label: level of progress, number 1..15
+            _progTopProgress.name = "ShowIt2TopProgressLabel";
+            _progTopValue = m_uiMainPanel.AddUIComponent<UILabel>(); // label: actual value
+            _progTopValue.name = "ShowItPanelProgTopValue";
             _progTopName.relativePosition = new Vector3(10, 10);// education or wealth
             _progTopProgress.relativePosition = new Vector3(150, 10); // number 1..15
             _progTopValue.relativePosition = new Vector3(200, 10); // actual value number
             // Infixo: todo slider showing nicely the progress and tresholds for various levels
 
             // leveling progress - land value, service coverage
-            _progBotName = UIUtils.CreateLabel(m_uiMainPanel, "ShowItPanelProgBotName", "Land value/Service coverage"); // education or wealth
-            _progBotProgress = UIUtils.CreateLabel(m_uiMainPanel, "ShowItPanelProgBotProgress", "-1"); // number 1..15
-            _progBotValue = UIUtils.CreateLabel(m_uiMainPanel, "ShowItPanelProgBotValue", "-1"); // actual value number
+            _progBotName = m_uiMainPanel.AddUIComponent<UILabel>(); // label: "land value" or "service coverage"
+            _progBotName.name = "ShowIt2BotNameLabel";
+            _progBotProgress = m_uiMainPanel.AddUIComponent<UILabel>(); // number 1..15
+            _progBotProgress.name = "ShowIt2BotProgressLabel";
+            _progBotValue = m_uiMainPanel.AddUIComponent<UILabel>(); // actual value number
+            _progBotValue.name = "ShowIt2BotValueLabel";
             _progBotName.relativePosition = new Vector3(10, 30); // land value or service coverage
             _progBotProgress.relativePosition = new Vector3(150, 30); // number 1..15
             _progBotValue.relativePosition = new Vector3(200, 30); // actual value number
             // Infixo: todo slider showing nicely the progress and tresholds for various levels
 
-
-            /*
-            UIRadialChart chart; // Infixo: radial chart -> change into a slider whowing max value
-            UILabel number; // indicator value
-            UILabel maxVal; // indicator max value (a little smaller)
-            UISprite icon;
-            UILabel label; // indicator name
-
-            for (var i = 0; i < MaxNumberOfCharts; i++)
-            {
-                chart = UIUtils.CreateTwoSlicedRadialChart(m_uiMainPanel, "ShowItZonedIndicatorsPanelChart" + i);
-                chart.eventClick += (component, eventParam) =>
-                {
-                    InfoManager.InfoMode infoMode = InfoManager.InfoMode.LandValue;
-                    InfoManager.SubInfoMode subInfoMode = InfoManager.SubInfoMode.Default;
-
-                    GetIndicatorInfoModes((ImmaterialResourceManager.Resource)component.objectUserData, out infoMode, out subInfoMode);
-
-                    if (Singleton<InfoManager>.instance.IsInfoModeAvailable(infoMode))
-                    {
-                        Singleton<InfoManager>.instance.SetCurrentMode(infoMode, subInfoMode);
-                    }
-                };
-                _charts.Add(i, chart);
-
-                number = UIUtils.CreateLabel(chart, "ShowItIndicatorsPanelNumber" + i, "");
-                //number.textAlignment = UIHorizontalAlignment.Center;
-                _numbers.Add(i, number);
-
-                maxVal = UIUtils.CreateLabel(chart, "ShowItIndicatorsPanelNumber" + i, "");
-                //maxVal.textAlignment = UIHorizontalAlignment.Center;
-                _maxVals.Add(i, maxVal);
-
-                icon = UIUtils.CreateSprite(chart, "ShowItIndicatorsPanelIcon" + i, "");
-                _icons.Add(i, icon);
-
-                label = UIUtils.CreateLabel(chart, "ShowItIndicatorsPanelLabel" + i, "");
-                label.font = UIUtils.GetUIFont("OpenSans-Regular");
-                //label.textAlignment = UIHorizontalAlignment.Center;
-                label.textColor = new Color32(206, 248, 0, 255);
-                _labels.Add(i, label);
-            }
-            */
             // service bars
             // UIComponent tree
-            // ShowItIndicatorsPanel (UIPanel)-> attached via AddComponent<>
+            // main panel (UIPanel)-> attached via AddComponent<>
             // ...singular controls
-            // ...ShowItXXXServiceBar (UIPanel)
+            // ...service bars (UIPanel)
             // ......sub-controls
             CreateUIServiceBar(m_uiMainPanel, 0, ImmaterialResourceManager.Resource.CargoTransport);
             CreateUIServiceBar(m_uiMainPanel, 1, ImmaterialResourceManager.Resource.PublicTransport);
@@ -317,15 +275,12 @@ namespace ShowIt2
             CreateUIServiceBar(m_uiMainPanel, 21, GroundPollution);
             CreateUIServiceBar(m_uiMainPanel, 22, ImmaterialResourceManager.Resource.FireHazard); // land value
             CreateUIServiceBar(m_uiMainPanel, 23, ImmaterialResourceManager.Resource.CrimeRate); // land value
-                                                                                                 //}
-                                                                                                 //catch (Exception e)
-                                                                                                 //{
-                                                                                                 //Debug.Log("[Show It!] ModManager:CreateUI -> Exception: " + e.Message);
-                                                                                                 //}
+
+            UpdateUI(); // initial placement and sizing
         }
 
-        // Infixo: place UI controls and reorganize UI when config changed
-        private void UpdateUI()
+        // Resizes the panel and places the controls according to current settings
+        public void UpdateUI()
         {
             //try
             //{
@@ -345,67 +300,44 @@ namespace ShowIt2
 
             //int rows;
             //int columns;
-            //float horizontalSpacing = ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing;
-            float verticalSpacing = ModConfig.Instance.Spacing;
+            //float horizontalSpacing = ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing;
+            float verticalSpacing = ShowIt2Config.Instance.Spacing;
             //float topSpacing = 40f; // Infixo: move all controls 300 down 60f + position * (UIServiceBar.DEFAULT_HEIGHT + 2f)
             //float bottomSpacing = 15f;
             //float horizontalPadding = 0f;
             //float verticalPadding = 0f;
 
-            if (ModConfig.Instance.Alignment is "Right")
+            if (ShowIt2Config.Instance.Alignment is "Right")
             {
-                //rows = Mathf.FloorToInt((m_uiMainPanel.parent.height - topSpacing - bottomSpacing - verticalSpacing) / (ModConfig.Instance.Scaling + ModConfig.Instance.Spacing));
+                //rows = Mathf.FloorToInt((m_uiMainPanel.parent.height - topSpacing - bottomSpacing - verticalSpacing) / (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing));
                 //columns = Mathf.CeilToInt((float)MaxNumberOfCharts / rows);
 
                 m_uiMainPanel.AlignTo(m_uiMainPanel.parent, UIAlignAnchor.TopRight);
-                //m_uiMainPanel.width = columns * (ModConfig.Instance.Scaling + ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing);
+                //m_uiMainPanel.width = columns * (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing);
                 //m_uiMainPanel.height = m_uiMainPanel.parent.height - bottomSpacing;
                 m_uiMainPanel.relativePosition = new Vector3(m_uiMainPanel.parent.width + 1f, 0f);
 
-                //horizontalPadding = ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing / 2f;
-                //verticalPadding = (m_uiMainPanel.parent.height - topSpacing - bottomSpacing - rows * (ModConfig.Instance.Scaling + ModConfig.Instance.Spacing)) / 2f;
+                //horizontalPadding = ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing / 2f;
+                //verticalPadding = (m_uiMainPanel.parent.height - topSpacing - bottomSpacing - rows * (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing)) / 2f;
             }
             else
             {
-                //columns = Mathf.FloorToInt((m_uiMainPanel.parent.width - horizontalSpacing) / (ModConfig.Instance.Scaling + ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing));
+                //columns = Mathf.FloorToInt((m_uiMainPanel.parent.width - horizontalSpacing) / (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing));
                 //rows = Mathf.CeilToInt((float)MaxNumberOfCharts / columns);
 
                 m_uiMainPanel.AlignTo(m_uiMainPanel.parent, UIAlignAnchor.BottomLeft);
                 //m_uiMainPanel.width = m_uiMainPanel.parent.width;
-                //m_uiMainPanel.height = rows * (ModConfig.Instance.Scaling + ModConfig.Instance.Spacing) + topSpacing + bottomSpacing;
+                //m_uiMainPanel.height = rows * (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing) + topSpacing + bottomSpacing;
                 m_uiMainPanel.relativePosition = new Vector3(0f, m_uiMainPanel.parent.height + 1f);
 
-                //horizontalPadding = (m_uiMainPanel.parent.width - columns * (ModConfig.Instance.Scaling + ModConfig.Instance.IndicatorsPanelChartHorizontalSpacing)) / 2f;
-                //verticalPadding = ModConfig.Instance.Spacing / 2f;
+                //horizontalPadding = (m_uiMainPanel.parent.width - columns * (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing)) / 2f;
+                //verticalPadding = ShowIt2Config.Instance.Spacing / 2f;
             }
             // Infixo todo: FIX change later!!!!
             //m_uiMainPanel.height = m_uiMainPanel.height + 25f * 17;
-
-            //_header.relativePosition = new Vector3(m_uiMainPanel.width / 2f - _header.width / 2f, _header.height / 2f + 105f); // Infixo: move down by 100
-            /*
-            UIRadialChart chart;
-
-            for (var i = 0; i < MaxNumberOfCharts; i++)
-            {
-                chart = _charts[i];
-                chart.AlignTo(m_uiMainPanel, UIAlignAnchor.TopRight);
-                chart.size = new Vector3(ModConfig.Instance.Scaling, ModConfig.Instance.Scaling);
-                chart.relativePosition = new Vector3(horizontalPadding + i % columns * (chart.width + horizontalSpacing), topSpacing + verticalPadding + i / columns * (chart.height + verticalSpacing));
-
-                _numbers[i].textScale = ModConfig.Instance.IndicatorsPanelNumberTextScale;
-                _maxVals[i].textScale = ModConfig.Instance.IndicatorsPanelNumberTextScale;
-                _icons[i].size = new Vector3(ModConfig.Instance.IndicatorsPanelIconSize, ModConfig.Instance.IndicatorsPanelIconSize);
-                _labels[i].textScale = ModConfig.Instance.IndicatorsPanelLabelTextScale;
-            }
-            */
-            //}
-            //catch (Exception e)
-            //{
-            //Debug.Log("[Show It!] ModManager:UpdateUI -> Exception: " + e.Message);
-            //}
         }
 
-        private void SetCharts(ImmaterialResourceManager.Resource[] resources)
+        /*private void SetCharts(ImmaterialResourceManager.Resource[] resources)
         {
             try
             {
@@ -422,17 +354,17 @@ namespace ShowIt2
             }
             catch (Exception e)
             {
-                Debug.Log("[Show It!] ModManager:SetCharts -> Exception: " + e.Message);
+                Debug.Log("[Show It!] ShowIt2Panel:SetCharts -> Exception: " + e.Message);
             }
-        }
+        }*/
 
-        private void SetChart(int index, ImmaterialResourceManager.Resource resource)
+        /*private void SetChart(int index, ImmaterialResourceManager.Resource resource)
         {
             try
             {
                 int resourceKey = (int)resource;
-                float resourceEffect = _effectsOnZonedBuilding[resourceKey];
-                float resourceMaxEffect = _maxEffectsOnZonedBuilding[resourceKey];
+                //float resourceEffect = _effectsOnZonedBuilding[resourceKey];
+                //float resourceMaxEffect = _maxEffectsOnZonedBuilding[resourceKey];
                 float resourceEffectPercentage = resourceEffect / resourceMaxEffect;
 
                 Color32 colorRed = new Color32(241, 136, 136, 255);
@@ -480,31 +412,31 @@ namespace ShowIt2
                 _labels[index].text = GetResourceName(resource).Substring(0, 4) + ".";
                 _labels[index].tooltip = GetResourceName(resource);
 
-                //if (ModConfig.Instance.IndicatorsPanelLegend is "Icons")
+                //if (ShowIt2Config.Instance.IndicatorsPanelLegend is "Icons")
                 //{
-                //_icons[index].position = new Vector3(_charts[index].width / 2f - _icons[index].width / 2f, 0f - (ModConfig.Instance.Scaling / 1.25f));
+                //_icons[index].position = new Vector3(_charts[index].width / 2f - _icons[index].width / 2f, 0f - (ShowIt2Config.Instance.Scaling / 1.25f));
                 //_icons[index].isVisible = true;
                 //}
-                //else if (ModConfig.Instance.IndicatorsPanelLegend is "Labels")
+                //else if (ShowIt2Config.Instance.IndicatorsPanelLegend is "Labels")
                 //{
-                //_labels[index].position = new Vector3(_charts[index].width / 2f - _labels[index].width / 2f, 0f - ModConfig.Instance.Scaling);
+                //_labels[index].position = new Vector3(_charts[index].width / 2f - _labels[index].width / 2f, 0f - ShowIt2Config.Instance.Scaling);
                 //_labels[index].isVisible = true;
                 //}
                 //else
                 //{
-                //_icons[index].position = new Vector3(_charts[index].width / 2f - _icons[index].width / 2f, 0f - (ModConfig.Instance.Scaling / 1.75f));
-                //_labels[index].position = new Vector3(_charts[index].width / 2f - _labels[index].width / 2f, 0f - ModConfig.Instance.Scaling);
+                //_icons[index].position = new Vector3(_charts[index].width / 2f - _icons[index].width / 2f, 0f - (ShowIt2Config.Instance.Scaling / 1.75f));
+                //_labels[index].position = new Vector3(_charts[index].width / 2f - _labels[index].width / 2f, 0f - ShowIt2Config.Instance.Scaling);
                 //_icons[index].isVisible = true;
                 //_labels[index].isVisible = true;
                 //}
             }
             catch (Exception e)
             {
-                Debug.Log("[Show It!] ModManager:SetChart -> Exception: " + e.Message);
+                Debug.Log("[Show It!] ShowIt2Panel:SetChart -> Exception: " + e.Message);
             }
         }
-
-        private void ResetAllCharts()
+        */
+        /*private void ResetAllCharts()
         {
             try
             {
@@ -535,100 +467,37 @@ namespace ShowIt2
             }
             catch (Exception e)
             {
-                Debug.Log("[Show It!] ModManager:ResetAllCharts -> Exception: " + e.Message);
+                Debug.Log("[Show It!] ShowIt2Panel:ResetAllCharts -> Exception: " + e.Message);
             }
-        }
+        }*/
 
-        private void RefreshData()
+        public void RefreshData()
         {
-            //try
-            //{
             ushort buildingID = WorldInfoPanel.GetCurrentInstanceID().Building;
-            //ushort buildingId = ((InstanceID)m_uiZonedBuildingWorldInfoPanel
-            //.GetType()
-            //.GetField("m_InstanceID", BindingFlags.NonPublic | BindingFlags.Instance)
-            //.GetValue(m_uiZonedBuildingWorldInfoPanel))
-            //.Building;
-
-            //if (_cachedBuildingID == 0 || _cachedBuildingID != buildingID)
-            //{
             Building building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[buildingID];
-            /*
-                    _effectsOnZonedBuilding.Clear();
-                    _maxEffectsOnZonedBuilding.Clear();
-
-                    float effect;
-                    float maxEffect;
-
-                    for (var i = 0; i < ImmaterialResourceManager.RESOURCE_COUNT; i++)
-                    {
-                        switch (building.Info.m_class.GetZone())
-                        {
-                            case ItemClass.Zone.ResidentialHigh:
-                            case ItemClass.Zone.ResidentialLow:
-                                effect = ResidentialBuildingHelper.CalculateResourceEffect(buildingID, ref building, (ImmaterialResourceManager.Resource)i);
-                                maxEffect = ResidentialBuildingHelper.GetMaxEffect((ImmaterialResourceManager.Resource)i);
-                                break;
-                            case ItemClass.Zone.Industrial:
-                                effect = IndustrialBuildingHelper.CalculateResourceEffect(buildingID, ref building, (ImmaterialResourceManager.Resource)i);
-                                maxEffect = IndustrialBuildingHelper.GetMaxEffect((ImmaterialResourceManager.Resource)i);
-                                break;
-                            case ItemClass.Zone.CommercialHigh:
-                            case ItemClass.Zone.CommercialLow:
-                                effect = CommercialBuildingHelper.CalculateResourceEffect(buildingID, ref building, (ImmaterialResourceManager.Resource)i);
-                                maxEffect = CommercialBuildingHelper.GetMaxEffect((ImmaterialResourceManager.Resource)i);
-                                break;
-                            case ItemClass.Zone.Office:
-                                effect = OfficeBuildingHelper.CalculateResourceEffect(buildingID, ref building, (ImmaterialResourceManager.Resource)i);
-                                maxEffect = OfficeBuildingHelper.GetMaxEffect((ImmaterialResourceManager.Resource)i);
-                                break;
-                            default:
-                                effect = 0;
-                                maxEffect = 0;
-                                break;
-                        }
-
-                        _effectsOnZonedBuilding.Add(i, effect);
-                        _maxEffectsOnZonedBuilding.Add(i, maxEffect);
-                    }
-
-                    //ResetAllCharts();
-            */
             switch (building.Info.m_class.GetZone())
             {
                 case ItemClass.Zone.ResidentialHigh:
                 case ItemClass.Zone.ResidentialLow:
-                    //ShowResidentialCharts();
                     ShowResidentialProgress(buildingID, ref building);
                     break;
                 case ItemClass.Zone.Industrial:
-                    //ShowIndustrialCharts();
                     ShowIndustrialProgress(buildingID, ref building);
                     break;
                 case ItemClass.Zone.CommercialHigh:
                 case ItemClass.Zone.CommercialLow:
-                    //ShowCommercialCharts();
                     ShowCommercialProgress(buildingID, ref building);
                     break;
                 case ItemClass.Zone.Office:
-                    //ShowOfficeCharts();
                     ShowOfficeProgress(buildingID, ref building);
                     break;
                 default:
 
                     break;
             }
-
-            //_cachedBuildingID = buildingID;
-            //}
-            //}
-            //catch (Exception e)
-            //{
-            //Debug.Log("[Show It!] ModManager:RefreshData -> Exception: " + e.Message);
-            //}
         }
 
-        private void ShowResidentialCharts()
+        /*private void ShowResidentialCharts()
         {
             try
             {
@@ -654,11 +523,11 @@ namespace ShowIt2
             }
             catch (Exception e)
             {
-                Debug.Log("[Show It!] ModManager:ShowResidentialCharts -> Exception: " + e.Message);
+                Debug.Log("[Show It!] ShowIt2Panel:ShowResidentialCharts -> Exception: " + e.Message);
             }
-        }
+        }*/
 
-        private void ShowIndustrialCharts()
+        /*private void ShowIndustrialCharts()
         {
             try
             {
@@ -685,11 +554,11 @@ namespace ShowIt2
             }
             catch (Exception e)
             {
-                Debug.Log("[Show It!] ModManager:ShowIndustrialCharts -> Exception: " + e.Message);
+                Debug.Log("[Show It!] ShowIt2Panel:ShowIndustrialCharts -> Exception: " + e.Message);
             }
-        }
+        }*/
 
-        private void ShowCommercialCharts()
+        /*private void ShowCommercialCharts()
         {
             try
             {
@@ -717,11 +586,11 @@ namespace ShowIt2
             }
             catch (Exception e)
             {
-                Debug.Log("[Show It!] ModManager:ShowCommercialCharts -> Exception: " + e.Message);
+                Debug.Log("[Show It!] ShowIt2Panel:ShowCommercialCharts -> Exception: " + e.Message);
             }
-        }
+        }*/
 
-        private void ShowOfficeCharts()
+        /*private void ShowOfficeCharts()
         {
             try
             {
@@ -751,11 +620,11 @@ namespace ShowIt2
             }
             catch (Exception e)
             {
-                Debug.Log("[Show It!] ModManager:ShowOfficeCharts -> Exception: " + e.Message);
+                Debug.Log("[Show It!] ShowIt2Panel:ShowOfficeCharts -> Exception: " + e.Message);
             }
-        }
+        }*/
 
-        private bool IsIndicatorAvailable(ImmaterialResourceManager.Resource resource)
+        /*private bool IsIndicatorAvailable(ImmaterialResourceManager.Resource resource)
         {
             InfoManager.InfoMode infoMode = InfoManager.InfoMode.LandValue;
             InfoManager.SubInfoMode subInfoMode = InfoManager.SubInfoMode.Default;
@@ -764,9 +633,9 @@ namespace ShowIt2
 
             return Singleton<InfoManager>.instance.IsInfoModeAvailable(infoMode);
 
-        }
+        }*/
 
-        private bool IsIndicatorPositive(ImmaterialResourceManager.Resource resource)
+        /*private bool IsIndicatorPositive(ImmaterialResourceManager.Resource resource)
         {
             switch (resource)
             {
@@ -833,7 +702,7 @@ namespace ShowIt2
                 default:
                     return false;
             }
-        }
+        }*/
 
         private static readonly Dictionary<ImmaterialResourceManager.Resource, string> LABELS = new Dictionary<ImmaterialResourceManager.Resource, string>
 		{
@@ -1111,7 +980,7 @@ namespace ShowIt2
 
         // This is an exact copy of CommonBuildingAI.GetHomeBehaviour to get info about wealth of the customers and number of visitors
         // This is a protected member and this data is not stored in Building object once used by the BuildingAI
-        protected void GetHomeBehaviour(ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, ref int aliveCount, ref int totalCount, ref int homeCount, ref int aliveHomeCount, ref int emptyHomeCount)
+        /*protected void GetHomeBehaviour(ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, ref int aliveCount, ref int totalCount, ref int homeCount, ref int aliveHomeCount, ref int emptyHomeCount)
         {
             CitizenManager instance = Singleton<CitizenManager>.instance;
             uint num = buildingData.m_citizenUnits;
@@ -1145,7 +1014,7 @@ namespace ShowIt2
                     break;
                 }
             }
-        }
+        }*/
 
 
         // The code is based on ResidentialBuildingAI.CheckBuildingLevel
@@ -1165,12 +1034,11 @@ namespace ShowIt2
             int aliveHomeCount = 0;
             int emptyHomeCount = 0;
             CommonBuildingAI buildingAI = (CommonBuildingAI)building.Info.m_buildingAI;
-            if (ShowIt2Patcher.patched)
+            //if (ShowIt2Patcher.patched)
                 CommonBuildingAI_Patches.GetHomeBehaviour_Reverse(buildingAI, buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount, ref homeCount, ref aliveHomeCount, ref emptyHomeCount);
-            else
-                GetHomeBehaviour(buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount, ref homeCount, ref aliveHomeCount, ref emptyHomeCount);
+            //else
+                //GetHomeBehaviour(buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount, ref homeCount, ref aliveHomeCount, ref emptyHomeCount);
 
-            // Citizen.BehaviourData is not accessible, so we must use Building data
             int education = behaviour.m_educated1Count + behaviour.m_educated2Count * 2 + behaviour.m_educated3Count * 3;
             int populace = behaviour.m_teenCount + behaviour.m_youngCount * 2 + behaviour.m_adultCount * 3 + behaviour.m_seniorCount * 3;
             if (populace != 0)
@@ -1196,24 +1064,23 @@ namespace ShowIt2
             _progBotValue.tooltip = $"Water value: {waterValue}";
         }
 
-        private int CalculateAndShowSingleServiceValue(
+        /*private int CalculateAndShowSingleServiceValue(
             int resourceRate, int middleRate, int maxRate, int middleEffect, int maxEffect, // params for CalculateResourceEffect
             int divisor, int uiCtrl) // uiCtrl is a dict-key to access proper controls
         {
             int value = ImmaterialResourceManager.CalculateResourceEffect(resourceRate, middleRate, maxRate, middleEffect, maxEffect) / divisor;
             int maxValue = maxEffect / divisor;
-            //_numbers[uiCtrl].text = value.ToString();
-            //_maxVals[uiCtrl].text = maxValue.ToString();
             return value;
-        }
+        }*/
+
         private int ProcessServiceValue(
             ushort[] resources, int index, // from CheckLocalResources
             ImmaterialResourceManager.Resource resourceType, // resource type
                                                              //int resourceRate, // not needed - taken from resources
             int middleRate, int maxRate, int middleEffect, int maxEffect, // params for CalculateResourceEffect
-            int divisor, bool negative = false, int groundPollutionRate = 0)
+            int divisor, bool negative = false, int customRate = 0)
         {
-            int resourceRate = (resourceType == GroundPollution ? groundPollutionRate : resources[index + (int)resourceType]);
+            int resourceRate = ( (resourceType == GroundPollution || resourceType == WaterProximity) ? customRate : resources[index + (int)resourceType]);
             int value = ImmaterialResourceManager.CalculateResourceEffect(resourceRate, middleRate, maxRate, middleEffect, maxEffect);
             //int maxValue = maxEffect / divisor;
             UIServiceBar uiBar = m_uiServices[resourceType];
@@ -1275,6 +1142,7 @@ namespace ShowIt2
             value -= ProcessServiceValue(resources, index, GroundPollution, 50, 255, 50, 100, 6, true, groundPollution); // special case
 
             // original calculations
+            /*
             int resourceRate = resources[index + 7]; // PublicTransport 7
             int resourceRate2 = resources[index + 2]; // PoliceDepartment 3
             int resourceRate3 = resources[index]; // HealthCare 0
@@ -1311,8 +1179,8 @@ namespace ShowIt2
             num -= ImmaterialResourceManager.CalculateResourceEffect(groundPollution, 50, 255, 50, 100) / 6; // Infixo todo: missing, there is no resource effect for that
 
             // debug check
-            //Debug.Log($"ShowIt2.CalculateServiceValueIndustrial, buildingID={buildingID}, original={num}, new={value}, same? {value == num}");
-
+            Debug.Log($"ShowIt2.CalculateServiceValueIndustrial, buildingID={buildingID}, original={num}, new={value}, same? {value == num}");
+            */
             return value;
         }
 
@@ -1328,10 +1196,10 @@ namespace ShowIt2
             int aliveWorkerCount = 0;
             int totalWorkerCount = 0;
             CommonBuildingAI buildingAI = (CommonBuildingAI)building.Info.m_buildingAI;
-            if (ShowIt2Patcher.patched)
+            //if (ShowIt2Patcher.patched)
                 CommonBuildingAI_Patches.GetWorkBehaviour_Reverse(buildingAI, buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
-            else
-                GetWorkBehaviour(buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
+            //else
+                //GetWorkBehaviour(buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
             int education = behaviour.m_educated1Count + behaviour.m_educated2Count * 2 + behaviour.m_educated3Count * 3;
             if (aliveWorkerCount != 0)
             {
@@ -1356,7 +1224,7 @@ namespace ShowIt2
 
         // This is an exact copy of CommonBuildingAI.GetVisitBehaviour to get info about wealth of the customers and number of visitors
         // This is a protected member and this data is not stored in Building object once used by the BuildingAI
-        private void GetVisitBehaviour(ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, ref int aliveCount, ref int totalCount)
+        /*private void GetVisitBehaviour(ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, ref int aliveCount, ref int totalCount)
         {
             CitizenManager instance = Singleton<CitizenManager>.instance;
             uint num = buildingData.m_citizenUnits;
@@ -1374,7 +1242,7 @@ namespace ShowIt2
                     break;
                 }
             }
-        }
+        }*/
 
         // The code is based on CommercialBuildingAI.CheckBuildingLevel
         private void ShowCommercialProgress(ushort buildingId, ref Building building)
@@ -1389,10 +1257,10 @@ namespace ShowIt2
             int aliveCount = 0;
             int totalCount = 0;
             CommonBuildingAI buildingAI = (CommonBuildingAI)building.Info.m_buildingAI;
-            if (ShowIt2Patcher.patched)
+            //if (ShowIt2Patcher.patched)
                 CommonBuildingAI_Patches.GetVisitBehaviour_Reverse(buildingAI, buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount); // aliveCount == visitorCount
-            else
-                GetVisitBehaviour(buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount); // aliveCount == visitorCount
+            //else
+                //GetVisitBehaviour(buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount); // aliveCount == visitorCount
             int wealth = behaviour.m_wealth1Count + behaviour.m_wealth2Count * 2 + behaviour.m_wealth3Count * 3;
             if (aliveCount != 0)
             {
@@ -1418,7 +1286,7 @@ namespace ShowIt2
 
         // This is an exact copy of CommonBuildingAI.GetWorkBehaviour to get info about education of the workers and number of workers
         // This is a protected member and this data is not stored in Building object once used by the BuildingAI
-        protected void GetWorkBehaviour(ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, ref int aliveCount, ref int totalCount)
+        /*protected void GetWorkBehaviour(ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, ref int aliveCount, ref int totalCount)
         {
             CitizenManager instance = Singleton<CitizenManager>.instance;
             uint num = buildingData.m_citizenUnits;
@@ -1436,7 +1304,7 @@ namespace ShowIt2
                     break;
                 }
             }
-        }
+        }*/
 
 
         // This is an exact copy of OfficeBuildingAI.CalculateServiceValue private method to get info about service coverage
@@ -1477,7 +1345,7 @@ namespace ShowIt2
             value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.Abandonment, 100, 500, 50, 100, 3, true); // there is no UI overlay for that
             value -= ProcessServiceValue(resources, index, GroundPollution, 50, 255, 50, 100, 4, true, groundPollution); // special case
 
-
+            /* original
             int resourceRate = resources[index + 7]; // PublicTransport
             int resourceRate2 = resources[index + 2]; // PoliceDepartment
             int resourceRate3 = resources[index]; // HealthCare
@@ -1517,8 +1385,8 @@ namespace ShowIt2
             num -= ImmaterialResourceManager.CalculateResourceEffect(groundPollution, 50, 255, 50, 100) / 4;
 
             // debug check
-            //Debug.Log($"ShowIt2.CalculateServiceValueOffice, buildingID={buildingID}, original={num}, new={value}, same? {value == num}");
-
+            Debug.Log($"ShowIt2.CalculateServiceValueOffice, buildingID={buildingID}, original={num}, new={value}, same? {value == num}");
+            */
             return value;
         }
 
@@ -1534,10 +1402,10 @@ namespace ShowIt2
             int aliveWorkerCount = 0;
             int totalWorkerCount = 0;
             CommonBuildingAI buildingAI = (CommonBuildingAI)building.Info.m_buildingAI;
-            if (ShowIt2Patcher.patched)
+            //if (ShowIt2Patcher.patched)
                 CommonBuildingAI_Patches.GetWorkBehaviour_Reverse(buildingAI, buildingID, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
-            else
-                GetWorkBehaviour(buildingID, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
+            //else
+                //GetWorkBehaviour(buildingID, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
             int education = behaviour.m_educated1Count + behaviour.m_educated2Count * 2 + behaviour.m_educated3Count * 3;
             if (aliveWorkerCount != 0)
             {

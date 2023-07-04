@@ -47,19 +47,12 @@
     <Reference Include="UnityEngine" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="CalcLocalRes.cs" />
-    <Compile Include="Configuration.cs" />
-    <Compile Include="Helpers\CommercialBuildingHelper.cs" />
-    <Compile Include="Helpers\IndustrialBuildingHelper.cs" />
-    <Compile Include="Helpers\OfficeBuildingHelper.cs" />
-    <Compile Include="ModConfig.cs" />
-    <Compile Include="ModInfo.cs" />
-    <Compile Include="Helpers\ResidentialBuildingHelper.cs" />
-    <Compile Include="ModManager.cs" />
-    <Compile Include="Loading.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ShowIt2Mod.cs" />
+    <Compile Include="ShowIt2Panel.cs" />
     <Compile Include="ShowIt2Patcher.cs" />
-    <Compile Include="UIUtils.cs" />
+    <Compile Include="ShowIt2UI.cs" />
+    <Compile Include="Configuration.cs" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
