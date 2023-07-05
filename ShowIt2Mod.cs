@@ -79,9 +79,10 @@ namespace ShowIt2
 
             m_uiText = (UITextField)group.AddTextfield("Panel", "", callback => { return; });
             m_uiText.isEnabled = false; // removes an outline and makes it read-only
+            m_uiText.width = 250f;
 
             selectedValue = ShowIt2Config.Instance.Scaling;
-            group.AddSlider("Scaling", 0.5f, 1.5f, 0.1f, selectedValue, sel =>
+            group.AddSlider("Scaling", 8f/16f, 20f/16f, 1f/16f, selectedValue, sel =>
             {
                 ShowIt2Config.Instance.Scaling = sel;
                 m_uiText.text = $"scaling={ShowIt2Config.Instance.Scaling} spacing={ShowIt2Config.Instance.Spacing}";
@@ -90,7 +91,7 @@ namespace ShowIt2
             });
 
             selectedValue = ShowIt2Config.Instance.Spacing;
-            group.AddSlider("Chart Vertical Spacing", 0f, 5f, 1f, selectedValue, sel =>
+            group.AddSlider("Spacing", 0f, 5f, 1f, selectedValue, sel =>
             {
                 ShowIt2Config.Instance.Spacing = sel;
                 m_uiText.text = $"scaling={ShowIt2Config.Instance.Scaling} spacing={ShowIt2Config.Instance.Spacing}";
@@ -115,7 +116,7 @@ namespace ShowIt2
     {
         public bool ShowPanel { get; set; } = true;
         public string Alignment { get; set; } = "Right";
-        public float Scaling { get; set; } = 0.8f;
+        public float Scaling { get; set; } = 13f/16f;
         public float Spacing { get; set; } = 2f;
 
         private static ShowIt2Config instance;

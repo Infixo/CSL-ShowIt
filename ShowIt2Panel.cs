@@ -8,6 +8,9 @@ using ColossalFramework.Globalization;
 // Alias the Enum: You can create an alias for an existing enum by using the using directive. 
 using ImmaterialResource = ImmaterialResourceManager.Resource;
 using static System.Net.Mime.MediaTypeNames;
+using UnityEngine.SocialPlatforms;
+using static Citizen;
+using static PathUnit;
 
 namespace ShowIt2
 {
@@ -24,18 +27,20 @@ namespace ShowIt2
         private UICheckBox m_showPanelCheckBox;
         private UIPanel m_uiMainPanel;
         // leveling progress - wealth, education section
+        private UILevelProgress m_topBar;
         private UILabel _progTopName; // education or wealth
         private UILabel _progTopProgress; // number 1..15
         private UILabel _progTopValue; // actual value number
         // Infixo: todo slider showing nicely the progress and tresholds for various levels
         // leveling progress - land value, service coverage
+        private UILevelProgress m_botBar;
         private UILabel _progBotName; // land value or service coverage
         private UILabel _progBotProgress; // number 1..15
         private UILabel _progBotValue; // actual value number
         // Infixo: todo slider showing nicely the progress and tresholds for various levels
-
         // resource value bars
         private Dictionary<ImmaterialResourceManager.Resource, UIServiceBar> m_uiServices = new Dictionary<ImmaterialResourceManager.Resource, UIServiceBar>();
+        private UIServiceBar[] m_uiBarPosition = new UIServiceBar[25];
 
 
         //private const int MaxNumberOfCharts = 17;
@@ -174,7 +179,8 @@ namespace ShowIt2
         {
             UIServiceBar uiServiceBar = new UIServiceBar(parent, "ShowIt2" + resource.ToString() + "ServiceBar");
             uiServiceBar.Width = 440f; // width of the parent is 0 atm
-            uiServiceBar.Panel.relativePosition = new Vector3(10f, 60f + position * (UIServiceBar.DEFAULT_HEIGHT + 2f)); // Infixo todo: scaling
+            //uiServiceBar.Panel.relativePosition = new Vector3(10f, 60f + position * (UIServiceBar.DEFAULT_HEIGHT + 2f)); // Infixo todo: scaling
+            uiServiceBar.Panel.relativePosition = new Vector3(10f, 60f + position * (UIServiceBar.DEFAULT_HEIGHT * ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing)); // Infixo todo: scaling
             uiServiceBar.Text = GetResourceName(resource);
             uiServiceBar.Limit = 60f; // Biggest is Cargo 100, then Fire 50, others are <= 33
             uiServiceBar.MaxValue = 20f;
@@ -183,6 +189,8 @@ namespace ShowIt2
             GetIndicatorInfoModes(resource, out InfoManager.InfoMode infoMode, out InfoManager.SubInfoMode subInfoMode);
             if (resource != GroundPollution && resource != ImmaterialResourceManager.Resource.Abandonment) // there is no UI overlay for Abandonment
                 uiServiceBar.Panel.isEnabled = Singleton<InfoManager>.instance.IsInfoModeAvailable(infoMode);
+            // store in a orderly fashion to allow for rescaling later
+            m_uiBarPosition[position] = uiServiceBar;
         }
 
         private void RescaleServiceBars(float limit)
@@ -199,7 +207,7 @@ namespace ShowIt2
             m_uiMainPanel.name = "ShowIt2Panel";
             m_uiMainPanel.backgroundSprite = "SubcategoriesPanel";
             m_uiMainPanel.opacity = 0.90f;
-            m_uiMainPanel.height = 60f + (UIServiceBar.DEFAULT_HEIGHT + 2f) * 24 + 10f;
+            m_uiMainPanel.height = 60f + (UIServiceBar.DEFAULT_HEIGHT * ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing) * 25 + 10f;
             m_uiMainPanel.width = m_uiZonedBuildingWorldInfoPanel.component.width;
 
             // checkbox to toggle on/off the extra panel
@@ -231,6 +239,9 @@ namespace ShowIt2
             _progTopProgress.relativePosition = new Vector3(150, 10); // number 1..15
             _progTopValue.relativePosition = new Vector3(200, 10); // actual value number
             // Infixo: todo slider showing nicely the progress and tresholds for various levels
+            m_topBar = new UILevelProgress(m_uiZonedBuildingWorldInfoPanel.component, "ShowIt2TopLevelBar");
+            m_topBar.Width = 190f;
+            m_topBar.Panel.relativePosition = new Vector3(255, 102);
 
             // leveling progress - land value, service coverage
             _progBotName = m_uiMainPanel.AddUIComponent<UILabel>(); // label: "land value" or "service coverage"
@@ -243,6 +254,9 @@ namespace ShowIt2
             _progBotProgress.relativePosition = new Vector3(150, 30); // number 1..15
             _progBotValue.relativePosition = new Vector3(200, 30); // actual value number
             // Infixo: todo slider showing nicely the progress and tresholds for various levels
+            m_botBar = new UILevelProgress(m_uiZonedBuildingWorldInfoPanel.component, "ShowIt2BotLevelBar");
+            m_botBar.Width = 190f;
+            m_botBar.Panel.relativePosition = new Vector3(255, 142);
 
             // service bars
             // UIComponent tree
@@ -270,12 +284,13 @@ namespace ShowIt2
             // dynamic - health, wellbeing
             CreateUIServiceBar(m_uiMainPanel, 17, ImmaterialResourceManager.Resource.Health); // land value
             CreateUIServiceBar(m_uiMainPanel, 18, ImmaterialResourceManager.Resource.Wellbeing); // land value
+            CreateUIServiceBar(m_uiMainPanel, 19, WaterProximity); // land value
             // negatives
-            CreateUIServiceBar(m_uiMainPanel, 19, ImmaterialResourceManager.Resource.Abandonment);
-            CreateUIServiceBar(m_uiMainPanel, 20, ImmaterialResourceManager.Resource.NoisePollution);
-            CreateUIServiceBar(m_uiMainPanel, 21, GroundPollution);
-            CreateUIServiceBar(m_uiMainPanel, 22, ImmaterialResourceManager.Resource.FireHazard); // land value
-            CreateUIServiceBar(m_uiMainPanel, 23, ImmaterialResourceManager.Resource.CrimeRate); // land value
+            CreateUIServiceBar(m_uiMainPanel, 20, ImmaterialResourceManager.Resource.Abandonment);
+            CreateUIServiceBar(m_uiMainPanel, 21, ImmaterialResourceManager.Resource.NoisePollution);
+            CreateUIServiceBar(m_uiMainPanel, 22, GroundPollution);
+            CreateUIServiceBar(m_uiMainPanel, 23, ImmaterialResourceManager.Resource.FireHazard); // land value
+            CreateUIServiceBar(m_uiMainPanel, 24, ImmaterialResourceManager.Resource.CrimeRate); // land value
 
             UpdateUI(); // initial placement and sizing
         }
@@ -313,7 +328,7 @@ namespace ShowIt2
                 //rows = Mathf.FloorToInt((m_uiMainPanel.parent.height - topSpacing - bottomSpacing - verticalSpacing) / (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing));
                 //columns = Mathf.CeilToInt((float)MaxNumberOfCharts / rows);
 
-                m_uiMainPanel.AlignTo(m_uiMainPanel.parent, UIAlignAnchor.TopRight);
+                //m_uiMainPanel.AlignTo(m_uiMainPanel.parent, UIAlignAnchor.TopRight);
                 //m_uiMainPanel.width = columns * (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing);
                 //m_uiMainPanel.height = m_uiMainPanel.parent.height - bottomSpacing;
                 m_uiMainPanel.relativePosition = new Vector3(m_uiMainPanel.parent.width + 1f, 0f);
@@ -326,7 +341,7 @@ namespace ShowIt2
                 //columns = Mathf.FloorToInt((m_uiMainPanel.parent.width - horizontalSpacing) / (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing));
                 //rows = Mathf.CeilToInt((float)MaxNumberOfCharts / columns);
 
-                m_uiMainPanel.AlignTo(m_uiMainPanel.parent, UIAlignAnchor.BottomLeft);
+                //m_uiMainPanel.AlignTo(m_uiMainPanel.parent, UIAlignAnchor.BottomLeft);
                 //m_uiMainPanel.width = m_uiMainPanel.parent.width;
                 //m_uiMainPanel.height = rows * (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing) + topSpacing + bottomSpacing;
                 m_uiMainPanel.relativePosition = new Vector3(0f, m_uiMainPanel.parent.height + 1f);
@@ -336,6 +351,12 @@ namespace ShowIt2
             }
             // Infixo todo: FIX change later!!!!
             //m_uiMainPanel.height = m_uiMainPanel.height + 25f * 17;
+            m_uiMainPanel.height = 60f + (UIServiceBar.DEFAULT_HEIGHT * ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing) * 25 + 10f;
+            for (int i = 0; i < 25; i++)
+            {
+                m_uiBarPosition[i].Panel.relativePosition = new Vector3(10f, 60f + i * (UIServiceBar.DEFAULT_HEIGHT * ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing));
+                m_uiBarPosition[i].SetScale(ShowIt2Config.Instance.Scaling);
+            }
         }
 
         /*private void SetCharts(ImmaterialResourceManager.Resource[] resources)
@@ -1051,18 +1072,25 @@ namespace ShowIt2
             Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(ImmaterialResourceManager.Resource.LandValue, building.m_position, out var local);
             int waterValue = ShowLandValue(buildingId, ref building);
 
-            // show it!
-            _progTopName.text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
-            _progTopName.tooltip = "[Level 1]  ..14 | 15..29 | 30..44 | 45..59 | 60..  [Level 5]" + Environment.NewLine + // Infixo todo: change to slider
+            // new shiny bars :)
+            m_topBar.Text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
+            m_topBar.MaxValues = new float[] { 15f, 30f, 45f, 60f, 80f };
+            m_topBar.Value = education;
+            m_topBar.Panel.tooltip = "[Level 1]  ..14 | 15..29 | 30..44 | 45..59 | 60..  [Level 5]" + Environment.NewLine +
                 $"Populace: Children {building.m_children} Teens {building.m_teens} Youngs {building.m_youngs} Adults {building.m_adults} Seniors {building.m_seniors}" + Environment.NewLine +
-                $"Education: Low {building.m_education1} Medium {building.m_education2} High {building.m_education3}";
-            _progTopProgress.text = progressTop.ToString();
-            _progTopValue.text = education.ToString();
-            _progBotName.text = Locale.Get(LocaleID.INFO_LANDVALUE_TITLE);
-            _progBotName.tooltip = "[Level 1]   ..5 |  6..20 | 21..40 | 41..60 | 61..  [Level 5]"; // Infixo todo: change to slider
-            _progBotProgress.text = progressBot.ToString();
-            _progBotValue.text = local.ToString();
-            _progBotValue.tooltip = $"Water value: {waterValue}";
+                $"Education: Edu {building.m_education1} Well {building.m_education2} High {building.m_education3}";
+            //_progTopName.text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
+            //_progTopProgress.text = progressTop.ToString();
+            //_progTopValue.text = education.ToString();
+            //_progBotName.text = Locale.Get(LocaleID.INFO_LANDVALUE_TITLE);
+            m_botBar.Text = Locale.Get(LocaleID.INFO_LANDVALUE_TITLE);
+            m_botBar.MaxValues = new float[] { 6f, 21f, 41f, 61f, 80f };
+            m_botBar.Value = local;
+            m_botBar.Panel.tooltip = "[Level 1]   ..5 |  6..20 | 21..40 | 41..60 | 61..  [Level 5]" + Environment.NewLine +
+                $"Water value: {waterValue}";
+            //_progBotProgress.text = progressBot.ToString();
+            //_progBotValue.text = local.ToString();
+            //_progBotValue.tooltip = $"Water value: {waterValue}";
         }
 
         /*private int CalculateAndShowSingleServiceValue(
@@ -1090,6 +1118,7 @@ namespace ShowIt2
             if (divisor < 10)
             {
                 // Service coverage
+                uiBar.ShowInts();
                 uiBar.MaxValue = maxEffect / divisor;
                 value /= divisor;
                 uiBar.Value = value;
@@ -1097,6 +1126,7 @@ namespace ShowIt2
             else
             {
                 // Land value
+                uiBar.ShowFloats();
                 uiBar.MaxValue = (float)maxEffect / (float)divisor;
                 uiBar.Value = (float)value / (float)divisor;
             }
@@ -1210,40 +1240,24 @@ namespace ShowIt2
             // service coverage
             int service = CalculateServiceValueIndustrial(buildingId, ref building);
 
-            // show it!
-            _progTopName.text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
-            _progTopName.tooltip = "[Level 1]  ..14 | 15..29 | 30..  [Level 3]" + Environment.NewLine + // Infixo todo: change to slider
-                $"Workers: {aliveWorkerCount}, Education: Low {behaviour.m_educated1Count} Medium {behaviour.m_educated2Count} High {behaviour.m_educated3Count}";
-            _progTopProgress.text = progressTop.ToString();
-            _progTopValue.text = education.ToString();
-            _progBotName.text = Locale.Get(LocaleID.POLICY_SERVICES);
-            _progBotName.tooltip = "[Level 1]  ..29 | 30..59 | 60..  [Level 3]"; // Infixo todo: change to slider
-            _progBotProgress.text = progressBot.ToString();
-            _progBotValue.text = service.ToString();
-            _progBotValue.tooltip = "";
+            // new shiny bars :)
+            m_topBar.Text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
+            m_topBar.MaxValues = new float[] { 15f, 30f, 45f };
+            m_topBar.Value = education;
+            m_topBar.Panel.tooltip = "[Level 1]  ..14 | 15..29 | 30..  [Level 3]" + Environment.NewLine + // Infixo todo: change to slider
+                $"Workers: {aliveWorkerCount}, Education: Edu {behaviour.m_educated1Count} Well {behaviour.m_educated2Count} High {behaviour.m_educated3Count}";
+            //_progTopName.text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
+            //_progTopProgress.text = progressTop.ToString();
+            //_progTopValue.text = education.ToString();
+            //_progBotName.text = Locale.Get(LocaleID.POLICY_SERVICES);
+            m_botBar.Text = Locale.Get(LocaleID.POLICY_SERVICES);
+            m_botBar.MaxValues = new float[] { 30f, 60f, 90f };
+            m_botBar.Value = service;
+            m_botBar.Panel.tooltip = "[Level 1]  ..29 | 30..59 | 60..  [Level 3]"; // Infixo todo: change to slider
+            //_progBotProgress.text = progressBot.ToString();
+            //_progBotValue.text = service.ToString();
+            //_progBotValue.tooltip = "";
         }
-
-        // This is an exact copy of CommonBuildingAI.GetVisitBehaviour to get info about wealth of the customers and number of visitors
-        // This is a protected member and this data is not stored in Building object once used by the BuildingAI
-        /*private void GetVisitBehaviour(ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, ref int aliveCount, ref int totalCount)
-        {
-            CitizenManager instance = Singleton<CitizenManager>.instance;
-            uint num = buildingData.m_citizenUnits;
-            int num2 = 0;
-            while (num != 0)
-            {
-                if ((instance.m_units.m_buffer[num].m_flags & CitizenUnit.Flags.Visit) != 0)
-                {
-                    instance.m_units.m_buffer[num].GetCitizenVisitBehaviour(ref behaviour, ref aliveCount, ref totalCount);
-                }
-                num = instance.m_units.m_buffer[num].m_nextUnit;
-                if (++num2 > 524288)
-                {
-                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-                    break;
-                }
-            }
-        }*/
 
         // The code is based on CommercialBuildingAI.CheckBuildingLevel
         private void ShowCommercialProgress(ushort buildingId, ref Building building)
@@ -1272,41 +1286,24 @@ namespace ShowIt2
             Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(ImmaterialResourceManager.Resource.LandValue, building.m_position, out var local);
             int waterValue = ShowLandValue(buildingId, ref building);
 
-            // show it!
-            _progTopName.text = "Wealth";
-            _progTopName.tooltip = "[Level 1]  ..29 | 30..44 | 45..  [Level 3]" + Environment.NewLine + // Infixo todo: change to slider
+            // new shiny bars :)
+            m_topBar.Text = "Wealth";
+            m_topBar.MaxValues = new float[] { 30f, 45f, 60f };
+            m_topBar.Value = wealth;
+            m_topBar.Panel.tooltip = "[Level 1]  ..29 | 30..44 | 45..  [Level 3]" + Environment.NewLine +
                 $"Visitors: {aliveCount}, Wealth: Low {behaviour.m_wealth1Count} Medium {behaviour.m_wealth2Count} High {behaviour.m_wealth3Count}";
-            _progTopProgress.text = progressTop.ToString();
-            _progTopValue.text = wealth.ToString();
-            _progBotName.text = Locale.Get(LocaleID.INFO_LANDVALUE_TITLE);
-            _progBotName.tooltip = "[Level 1]  ..20 | 21..40 | 41..  [Level 3]"; // Infixo todo: change to slider
-            _progBotProgress.text = progressBot.ToString();
-            _progBotValue.text = local.ToString();
-            _progBotValue.tooltip = $"Water value: {waterValue}";
+            //_progTopName.text = "Wealth";
+            //_progTopProgress.text = progressTop.ToString();
+            //_progTopValue.text = wealth.ToString();
+            m_botBar.Text = Locale.Get(LocaleID.INFO_LANDVALUE_TITLE);
+            m_botBar.MaxValues = new float[] { 21f, 41f, 61f };
+            m_botBar.Value = local;
+            m_botBar.Panel.tooltip = "[Level 1]  ..20 | 21..40 | 41..  [Level 3]" + Environment.NewLine +
+                $"Water value: {waterValue}";
+            //_progBotName.text = Locale.Get(LocaleID.INFO_LANDVALUE_TITLE);
+            //_progBotProgress.text = progressBot.ToString();
+            //_progBotValue.text = local.ToString();
         }
-
-        // This is an exact copy of CommonBuildingAI.GetWorkBehaviour to get info about education of the workers and number of workers
-        // This is a protected member and this data is not stored in Building object once used by the BuildingAI
-        /*protected void GetWorkBehaviour(ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, ref int aliveCount, ref int totalCount)
-        {
-            CitizenManager instance = Singleton<CitizenManager>.instance;
-            uint num = buildingData.m_citizenUnits;
-            int num2 = 0;
-            while (num != 0)
-            {
-                if ((instance.m_units.m_buffer[num].m_flags & CitizenUnit.Flags.Work) != 0)
-                {
-                    instance.m_units.m_buffer[num].GetCitizenWorkBehaviour(ref behaviour, ref aliveCount, ref totalCount);
-                }
-                num = instance.m_units.m_buffer[num].m_nextUnit;
-                if (++num2 > 524288)
-                {
-                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-                    break;
-                }
-            }
-        }*/
-
 
         // This is an exact copy of OfficeBuildingAI.CalculateServiceValue private method to get info about service coverage
         // Calls to CalculateResourceEffect are converted to ProcessServiceValue with exactly the same params
@@ -1416,17 +1413,23 @@ namespace ShowIt2
             // service coverage
             int service = CalculateServiceValueOffice(buildingID, ref building);
 
-            // show it!
-            _progTopName.text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
-            _progTopName.tooltip = "[Level 1]  ..14 | 15..29 | 30..  [Level 3]" + Environment.NewLine + // Infixo todo: change to slider
-                $"Workers: {aliveWorkerCount}, Education: Low {behaviour.m_educated1Count} Medium {behaviour.m_educated2Count} High {behaviour.m_educated3Count}";
-            _progTopProgress.text = progressTop.ToString();
-            _progTopValue.text = education.ToString();
-            _progBotName.text = Locale.Get(LocaleID.POLICY_SERVICES);
-            _progBotName.tooltip = "[Level 1]  ..44 | 45..89 | 90..  [Level 3]"; // Infixo todo: change to slider
-            _progBotProgress.text = progressBot.ToString();
-            _progBotValue.text = service.ToString();
-            _progBotValue.tooltip = "";
+            // new shiny bars :)
+            m_topBar.Text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
+            m_topBar.MaxValues = new float[] { 15f, 30f, 45f };
+            m_topBar.Value = education;
+            m_topBar.Panel.tooltip = "[Level 1]  ..14 | 15..29 | 30..  [Level 3]" + Environment.NewLine + // Infixo todo: change to slider
+                $"Workers: {aliveWorkerCount}, Education: Edu {behaviour.m_educated1Count} Well {behaviour.m_educated2Count} High {behaviour.m_educated3Count}";
+            //_progTopName.text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
+            //_progTopProgress.text = progressTop.ToString();
+            //_progTopValue.text = education.ToString();
+            m_botBar.Text = Locale.Get(LocaleID.POLICY_SERVICES);
+            m_botBar.MaxValues = new float[] { 45f, 90f, 135f };
+            m_botBar.Value = service;
+            m_botBar.Panel.tooltip = "[Level 1]  ..44 | 45..89 | 90..  [Level 3]"; // Infixo todo: change to slider
+            //_progBotName.text = Locale.Get(LocaleID.POLICY_SERVICES);
+            //_progBotProgress.text = progressBot.ToString();
+            //_progBotValue.text = service.ToString();
+            //_progBotValue.tooltip = "";
         }
 
         private int ShowLandValue(ushort buildingID, ref Building data)
