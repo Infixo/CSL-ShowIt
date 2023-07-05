@@ -208,6 +208,7 @@ namespace ShowIt2
             m_showPanelCheckBox.width = 110f;
             m_showPanelCheckBox.label.textColor = new Color32(185, 221, 254, 255);
             m_showPanelCheckBox.label.textScale = 0.8125f;
+            m_showPanelCheckBox.label.font = UIFonts.Regular;
             m_showPanelCheckBox.tooltip = "Indicators will show how well serviced the building is and what problems might prevent the building from leveling up.";
             m_showPanelCheckBox.AlignTo(_makeHistoricalPanel, UIAlignAnchor.TopLeft);
             m_showPanelCheckBox.relativePosition = new Vector3(_makeHistoricalPanel.width - m_showPanelCheckBox.width, 6f);

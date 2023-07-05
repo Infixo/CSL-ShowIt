@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 using ColossalFramework.UI;
 //using System.ComponentModel;
 //using System.Reflection.Emit;
@@ -6,75 +7,105 @@ using ColossalFramework.UI;
 
 namespace ShowIt2
 {
-    //public class UIUtils
-        // Infixo todo: create slider for showing progress with level tresholds
-        // Infixo todo: create slider for showing value of the immaterial resource effect
-    //{
-        /*public static UIFont GetUIFont(string name)
-        {
-            UIFont[] fonts = Resources.FindObjectsOfTypeAll<UIFont>();
 
-            foreach (UIFont font in fonts)
+        public static class UIFonts
+        {
+            private static UIFont m_regular;
+            private static UIFont m_semiBold;
+
+            public static UIFont Regular
             {
-                if (font.name.CompareTo(name) == 0)
+                get
                 {
-                    return font;
+                    if (m_regular == null)
+                    {
+                        m_regular = Resources.FindObjectsOfTypeAll<UIFont>().FirstOrDefault((UIFont f) => f.name == "OpenSans-Regular");
+                    }
+                    return m_regular;
                 }
             }
 
-            return null;
-        }*/
+            public static UIFont SemiBold
+            {
+                get
+                {
+                    if (m_semiBold == null)
+                    {
+                        m_semiBold = Resources.FindObjectsOfTypeAll<UIFont>().FirstOrDefault((UIFont f) => f.name == "OpenSans-Semibold");
+                    }
+                    return m_semiBold;
+                }
+            }
+        }
+    //public class UIUtils
+    // Infixo todo: create slider for showing progress with level tresholds
+    // Infixo todo: create slider for showing value of the immaterial resource effect
+    //{
+    /*public static UIFont GetUIFont(string name)
+    {
+        UIFont[] fonts = Resources.FindObjectsOfTypeAll<UIFont>();
 
-        /*public static UIPanel CreatePanel(UIComponent parent, string name)
+        foreach (UIFont font in fonts)
         {
-            UIPanel panel = parent.AddUIComponent<UIPanel>();
-            panel.name = name;
+            if (font.name.CompareTo(name) == 0)
+            {
+                return font;
+            }
+        }
 
-            return panel;
-        }*/
+        return null;
+    }*/
 
-        /*public static UISprite CreateSprite(UIComponent parent, string name, string spriteName)
-        {
-            UISprite sprite = parent.AddUIComponent<UISprite>();
-            sprite.name = name;
-            sprite.spriteName = spriteName;
+    /*public static UIPanel CreatePanel(UIComponent parent, string name)
+    {
+        UIPanel panel = parent.AddUIComponent<UIPanel>();
+        panel.name = name;
 
-            return sprite;
-        }*/
+        return panel;
+    }*/
 
-        /*public static UILabel CreateLabel(UIComponent parent, string name, string text)
-        {
-            UILabel label = parent.AddUIComponent<UILabel>();
-            //label.textAlignment = UIHorizontalAlignment.Center; // Infixo: looks like a default for all labels
-            label.name = name;
-            label.text = text;
+    /*public static UISprite CreateSprite(UIComponent parent, string name, string spriteName)
+    {
+        UISprite sprite = parent.AddUIComponent<UISprite>();
+        sprite.name = name;
+        sprite.spriteName = spriteName;
 
-            return label;
-        }*/
+        return sprite;
+    }*/
+
+    /*public static UILabel CreateLabel(UIComponent parent, string name, string text)
+    {
+        UILabel label = parent.AddUIComponent<UILabel>();
+        //label.textAlignment = UIHorizontalAlignment.Center; // Infixo: looks like a default for all labels
+        label.name = name;
+        label.text = text;
+
+        return label;
+    }*/
 
 
-        /*public static UIRadialChart CreateTwoSlicedRadialChart(UIComponent parent, string name)
-        {
-            UIRadialChart radialChart = parent.AddUIComponent<UIRadialChart>();
-            radialChart.name = name;
+    /*public static UIRadialChart CreateTwoSlicedRadialChart(UIComponent parent, string name)
+    {
+        UIRadialChart radialChart = parent.AddUIComponent<UIRadialChart>();
+        radialChart.name = name;
 
-            radialChart.size = new Vector3(50f, 50f);
-            radialChart.spriteName = "PieChartBg";
+        radialChart.size = new Vector3(50f, 50f);
+        radialChart.spriteName = "PieChartBg";
 
-            radialChart.AddSlice();
-            UIRadialChart.SliceSettings slice = radialChart.GetSlice(0);
-            Color32 color = new Color32(229, 229, 229, 128);
-            slice.outterColor = color;
-            slice.innerColor = color;
+        radialChart.AddSlice();
+        UIRadialChart.SliceSettings slice = radialChart.GetSlice(0);
+        Color32 color = new Color32(229, 229, 229, 128);
+        slice.outterColor = color;
+        slice.innerColor = color;
 
-            radialChart.AddSlice();
-            UIRadialChart.SliceSettings slice1 = radialChart.GetSlice(1);
-            Color32 color1 = new Color32(178, 178, 178, 128);
-            slice1.outterColor = color1;
-            slice1.innerColor = color1;
+        radialChart.AddSlice();
+        UIRadialChart.SliceSettings slice1 = radialChart.GetSlice(1);
+        Color32 color1 = new Color32(178, 178, 178, 128);
+        slice1.outterColor = color1;
+        slice1.innerColor = color1;
 
-            return radialChart;
-        }*/
+        return radialChart;
+    }*/
     //}
 
     // UI control to show the service coverage using a progress bar
@@ -174,6 +205,7 @@ namespace ShowIt2
             // text
             m_uiTextLabel = m_uiPanel.AddUIComponent<UILabel>();
             m_uiTextLabel.name = name + "Text";
+            m_uiTextLabel.font = UIFonts.Regular;
             m_uiTextLabel.textAlignment = UIHorizontalAlignment.Left;
             m_uiTextLabel.relativePosition = new Vector3(0, 0);
             m_uiTextLabel.textScale = DEFAULT_SCALE; // Infixo todo: connect with options
@@ -182,6 +214,7 @@ namespace ShowIt2
             // value
             m_uiValueLabel = m_uiPanel.AddUIComponent<UILabel>();
             m_uiValueLabel.name = name + "Value";
+            m_uiValueLabel.font = UIFonts.Regular;
             m_uiValueLabel.width = VALUE_WIDTH;
             m_uiValueLabel.textAlignment = UIHorizontalAlignment.Left;
             m_uiValueLabel.relativePosition = new Vector3(TEXT_WIDTH, 0);
@@ -203,6 +236,7 @@ namespace ShowIt2
             // maxValue
             m_uiMaxValueLabel = m_uiPanel.AddUIComponent<UILabel>();
             m_uiMaxValueLabel.name = name + "MaxValue";
+            m_uiMaxValueLabel.font = UIFonts.Regular;
             m_uiMaxValueLabel.width = VALUE_WIDTH;
             m_uiMaxValueLabel.textAlignment = UIHorizontalAlignment.Center;
             m_uiMaxValueLabel.relativePosition = new Vector3(370f, 0);
