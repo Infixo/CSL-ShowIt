@@ -89,8 +89,8 @@ namespace ShowIt2
         [HarmonyPostfix, HarmonyPatch("OnSetTarget")]
         public static void OnSetTarget_Postfix(ZonedBuildingWorldInfoPanel __instance)
         {
-            ushort buildingID = WorldInfoPanel.GetCurrentInstanceID().Building;
-            Debug.Log($"{ShowIt2Patcher.HarmonyId}.OnSetTarget_Postfix: id={buildingID} building={__instance.buildingName}");
+            //ushort buildingID = WorldInfoPanel.GetCurrentInstanceID().Building;
+            //Debug.Log($"{ShowIt2Patcher.HarmonyId}.OnSetTarget_Postfix: id={buildingID} building={__instance.buildingName}");
             // Infixo.ShowIt2.OnSetTarget_Postfix: id=17609 building=Nylons Galore
             ShowIt2Mod.Panel?.RefreshData(); // ?. is just a failsafe
         }

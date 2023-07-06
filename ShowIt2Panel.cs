@@ -305,6 +305,14 @@ namespace ShowIt2
             CreateUIServiceBar(m_uiMainPanel, 24, ImmaterialResourceManager.Resource.CrimeRate); // land value
 
             UpdateUI(); // initial placement and sizing
+
+            // Realistic Population button => 282x78
+            UIButton rpButton = m_uiZonedBuildingWorldInfoPanel.component.Find<UIButton>("UIButton");
+            if (rpButton != null)
+                rpButton.relativePosition = new Vector3(282f, 78f);
+            else
+                Debug.Log("ShowIt2.CreateUI: cannot find RP button");
+            //UIButton b2 = m_uiZonedBuildingWorldInfoPanel.component.GetComponent<UIButton>();
         }
 
         // Resizes the panel and places the controls according to current settings
@@ -530,6 +538,9 @@ namespace ShowIt2
 
                     break;
             }
+            // Realistic Population button => 282x78
+            //UIButton rpButton = m_uiZonedBuildingWorldInfoPanel.component.Find<UIButton>("UIButton");
+            //UIButton b2 = m_uiZonedBuildingWorldInfoPanel.component.GetComponent<UIButton>();
         }
 
         /*private void ShowResidentialCharts()

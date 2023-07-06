@@ -9,7 +9,7 @@ namespace ShowIt2
 {
     public class ShowIt2Mod : LoadingExtensionBase, IUserMod
     {
-        public string Name => "Show It 2! (wip)";
+        public string Name => "Show It 2!";
         public string Description => "Shows service coverage, land value and details about leveling for zoned buildings.";
 
         private static GameObject m_goPanel;
@@ -116,8 +116,8 @@ namespace ShowIt2
     {
         public bool ShowPanel { get; set; } = true;
         public string Alignment { get; set; } = "Right";
-        public float Scaling { get; set; } = 13f/16f;
-        public float Spacing { get; set; } = 1f;
+        public float Scaling { get; set; } = 12f/16f;
+        public float Spacing { get; set; } = 2f;
 
         private static ShowIt2Config instance;
 
