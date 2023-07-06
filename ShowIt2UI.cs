@@ -298,7 +298,7 @@ namespace ShowIt2
         private const float SMALL_SCALE = 0.625f; // 0.625f is 10/16 used in small text on the ZonedInfo panel
         private const float TEXT_WIDTH = 80f; // 45f + 120f * DEFAULT_SCALE;
         private const float VALUE_WIDTH = 6f + 18f * DEFAULT_SCALE;
-        public const float DEFAULT_HEIGHT = 14f; // 1f + 17f * DEFAULT_SCALE;
+        public const float DEFAULT_HEIGHT = 13f; // 1f + 17f * DEFAULT_SCALE;
         // internals
         //private Color m_negativeColor = Color.red;
         //private Color m_positiveColor = Color.green;
@@ -368,27 +368,22 @@ namespace ShowIt2
             // panel
             m_uiPanel = parent.AddUIComponent<UIPanel>();
             m_uiPanel.name = name;
-            m_uiPanel.height = 40f;
+            m_uiPanel.height = 40f; // 14f + 10f + 11f
 
             // text
             m_uiTextLabel = m_uiPanel.AddUIComponent<UILabel>();
             m_uiTextLabel.name = "Text";
             m_uiTextLabel.font = UIFonts.Regular;
-            //m_uiTextLabel.textAlignment = UIHorizontalAlignment.Left;
             m_uiTextLabel.relativePosition = new Vector3(0, 0);
-            m_uiTextLabel.textScale = DEFAULT_SCALE; // Infixo todo: connect with options
-            //m_uiTextLabel.textColor = Color.white;
-            //m_uiTextLabel.disabledTextColor = m_disabledColor;
+            m_uiTextLabel.textScale = 0.75f; // 12/16
 
             // value
             m_uiValueLabel = m_uiPanel.AddUIComponent<UILabel>();
             m_uiValueLabel.name = "Value";
             m_uiValueLabel.font = UIFonts.Regular;
             m_uiValueLabel.width = VALUE_WIDTH;
-            //m_uiValueLabel.textAlignment = UIHorizontalAlignment.Left;
-            m_uiValueLabel.relativePosition = new Vector3(TEXT_WIDTH, 0);
-            m_uiValueLabel.textScale = DEFAULT_SCALE; // Infixo todo: connect with options
-            //m_uiValueLabel.disabledTextColor = m_disabledColor;
+            m_uiValueLabel.relativePosition = new Vector3(TEXT_WIDTH, -1f);
+            m_uiValueLabel.textScale = 0.8125f; // 13/16
 
             // bars
             for (int i = 0; i < MAX_PARTS; i++)
@@ -397,7 +392,7 @@ namespace ShowIt2
                 bar.name = "Bar" + i;
                 bar.relativePosition = new Vector3(50f * i, DEFAULT_HEIGHT);
                 bar.width = 50f;
-                bar.height = DEFAULT_HEIGHT; // Infixo todo: options
+                bar.height = 12f; // ZonedInfo's Level bar is 14f
                 bar.progressColor = m_progressColor;
                 bar.progressSprite = "LevelBarForeground"; // economy panel uses PlainWhite
                 bar.backgroundSprite = "LevelBarBackground";
@@ -415,7 +410,7 @@ namespace ShowIt2
                 lbl.font = UIFonts.Regular;
                 lbl.width = VALUE_WIDTH;
                 //lbl.textAlignment = UIHorizontalAlignment.Center;
-                lbl.relativePosition = new Vector3(50f * (i+1), DEFAULT_HEIGHT + DEFAULT_HEIGHT + 2f); // Text has actually 15f height
+                lbl.relativePosition = new Vector3(50f * (i+1), DEFAULT_HEIGHT + 12f + 2f);
                 lbl.textScale = SMALL_SCALE; // Infixo todo: connect with options
                 m_uiMidLabels[i] = lbl;
             }

@@ -28,15 +28,15 @@ namespace ShowIt2
         private UIPanel m_uiMainPanel;
         // leveling progress - wealth, education section
         private UILevelProgress m_topBar;
-        private UILabel _progTopName; // education or wealth
-        private UILabel _progTopProgress; // number 1..15
-        private UILabel _progTopValue; // actual value number
+        //private UILabel _progTopName; // education or wealth
+        //private UILabel _progTopProgress; // number 1..15
+        //private UILabel _progTopValue; // actual value number
         // Infixo: todo slider showing nicely the progress and tresholds for various levels
         // leveling progress - land value, service coverage
         private UILevelProgress m_botBar;
-        private UILabel _progBotName; // land value or service coverage
-        private UILabel _progBotProgress; // number 1..15
-        private UILabel _progBotValue; // actual value number
+        //private UILabel _progBotName; // land value or service coverage
+        //private UILabel _progBotProgress; // number 1..15
+        //private UILabel _progBotValue; // actual value number
         // Infixo: todo slider showing nicely the progress and tresholds for various levels
         // resource value bars
         private Dictionary<ImmaterialResourceManager.Resource, UIServiceBar> m_uiServices = new Dictionary<ImmaterialResourceManager.Resource, UIServiceBar>();
@@ -207,8 +207,16 @@ namespace ShowIt2
             m_uiMainPanel.name = "ShowIt2Panel";
             m_uiMainPanel.backgroundSprite = "SubcategoriesPanel";
             m_uiMainPanel.opacity = 0.90f;
-            m_uiMainPanel.height = 60f + (UIServiceBar.DEFAULT_HEIGHT * ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing) * 25 + 10f;
+            //m_uiMainPanel.height = 10f + (UIServiceBar.DEFAULT_HEIGHT * ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing) * 25 + 10f;
             m_uiMainPanel.width = m_uiZonedBuildingWorldInfoPanel.component.width;
+            m_uiMainPanel.isVisible = ShowIt2Config.Instance.ShowPanel;
+
+            // adjust a little Zoned Building Info
+            //OverWorkSituation // this label overlaps => move 228x5 => 230x20
+            UILabel overWorkSituation = m_uiZonedBuildingWorldInfoPanel.Find<UILabel>("OverWorkSituation");
+            overWorkSituation.relativePosition = new Vector3(230f, 20f); // shift down
+            UISprite specPolicyIcon = m_uiZonedBuildingWorldInfoPanel.Find<UISprite>("SpecializationPolicyIcon");
+            specPolicyIcon.relativePosition = new Vector3(specPolicyIcon.relativePosition.x, specPolicyIcon.relativePosition.y-4f); // shift up
 
             // checkbox to toggle on/off the extra panel
             UIPanel _makeHistoricalPanel = m_uiZonedBuildingWorldInfoPanel.Find("MakeHistoricalPanel").GetComponent<UIPanel>();
@@ -218,7 +226,7 @@ namespace ShowIt2
             m_showPanelCheckBox.label.textScale = 0.8125f;
             m_showPanelCheckBox.label.font = UIFonts.Regular;
             m_showPanelCheckBox.tooltip = "Indicators will show how well serviced the building is and what problems might prevent the building from leveling up.";
-            m_showPanelCheckBox.AlignTo(_makeHistoricalPanel, UIAlignAnchor.TopLeft);
+            //m_showPanelCheckBox.AlignTo(_makeHistoricalPanel, UIAlignAnchor.TopLeft);
             m_showPanelCheckBox.relativePosition = new Vector3(_makeHistoricalPanel.width - m_showPanelCheckBox.width, 6f);
             m_showPanelCheckBox.eventCheckChanged += (component, value) =>
             {
@@ -229,6 +237,7 @@ namespace ShowIt2
             };
 
             // leveling progress - wealth, education section
+            /*
             _progTopName = m_uiMainPanel.AddUIComponent<UILabel>(); // label: "education" or "wealth"
             _progTopName.name = "ShowIt2TopNameLabel";
             _progTopProgress = m_uiMainPanel.AddUIComponent<UILabel>(); // label: level of progress, number 1..15
@@ -238,12 +247,14 @@ namespace ShowIt2
             _progTopName.relativePosition = new Vector3(10, 10);// education or wealth
             _progTopProgress.relativePosition = new Vector3(150, 10); // number 1..15
             _progTopValue.relativePosition = new Vector3(200, 10); // actual value number
+            */
             // Infixo: todo slider showing nicely the progress and tresholds for various levels
             m_topBar = new UILevelProgress(m_uiZonedBuildingWorldInfoPanel.component, "ShowIt2TopLevelBar");
-            m_topBar.Width = 190f;
-            m_topBar.Panel.relativePosition = new Vector3(255, 102);
+            m_topBar.Width = 185f;
+            m_topBar.Panel.relativePosition = new Vector3(255f, 104f);
 
             // leveling progress - land value, service coverage
+            /*
             _progBotName = m_uiMainPanel.AddUIComponent<UILabel>(); // label: "land value" or "service coverage"
             _progBotName.name = "ShowIt2BotNameLabel";
             _progBotProgress = m_uiMainPanel.AddUIComponent<UILabel>(); // number 1..15
@@ -253,10 +264,11 @@ namespace ShowIt2
             _progBotName.relativePosition = new Vector3(10, 30); // land value or service coverage
             _progBotProgress.relativePosition = new Vector3(150, 30); // number 1..15
             _progBotValue.relativePosition = new Vector3(200, 30); // actual value number
+            */
             // Infixo: todo slider showing nicely the progress and tresholds for various levels
             m_botBar = new UILevelProgress(m_uiZonedBuildingWorldInfoPanel.component, "ShowIt2BotLevelBar");
-            m_botBar.Width = 190f;
-            m_botBar.Panel.relativePosition = new Vector3(255, 142);
+            m_botBar.Width = 185f;
+            m_botBar.Panel.relativePosition = new Vector3(255f, 142f);
 
             // service bars
             // UIComponent tree
@@ -304,6 +316,7 @@ namespace ShowIt2
             //_header.relativePosition = new Vector3(m_uiMainPanel.width / 2f - _header.width / 2f, _header.height / 2f + 5f);
             // Infixo: new section showing leveling progress
             // leveling progress - wealth, education section
+            /*
             _progTopName.relativePosition = new Vector3(10, 10);// education or wealth
             _progTopProgress.relativePosition = new Vector3(150, 10); // number 1..15
             _progTopValue.relativePosition = new Vector3(200, 10); // actual value number
@@ -313,11 +326,11 @@ namespace ShowIt2
             _progBotProgress.relativePosition = new Vector3(150, 30); // number 1..15
             _progBotValue.relativePosition = new Vector3(200, 30); // actual value number
                                                                    // Infixo: todo slider showing nicely the progress and tresholds for various levels
-
+            */
             //int rows;
             //int columns;
             //float horizontalSpacing = ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing;
-            float verticalSpacing = ShowIt2Config.Instance.Spacing;
+            //float verticalSpacing = ShowIt2Config.Instance.Spacing;
             //float topSpacing = 40f; // Infixo: move all controls 300 down 60f + position * (UIServiceBar.DEFAULT_HEIGHT + 2f)
             //float bottomSpacing = 15f;
             //float horizontalPadding = 0f;
@@ -344,17 +357,17 @@ namespace ShowIt2
                 //m_uiMainPanel.AlignTo(m_uiMainPanel.parent, UIAlignAnchor.BottomLeft);
                 //m_uiMainPanel.width = m_uiMainPanel.parent.width;
                 //m_uiMainPanel.height = rows * (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing) + topSpacing + bottomSpacing;
-                m_uiMainPanel.relativePosition = new Vector3(0f, m_uiMainPanel.parent.height + 1f);
+                m_uiMainPanel.relativePosition = new Vector3(0f, m_uiMainPanel.parent.height - 14f); // there some issue with ZonedInfoView, its height is bigger that actual window
 
                 //horizontalPadding = (m_uiMainPanel.parent.width - columns * (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing)) / 2f;
                 //verticalPadding = ShowIt2Config.Instance.Spacing / 2f;
             }
             // Infixo todo: FIX change later!!!!
             //m_uiMainPanel.height = m_uiMainPanel.height + 25f * 17;
-            m_uiMainPanel.height = 60f + (UIServiceBar.DEFAULT_HEIGHT * ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing) * 25 + 10f;
+            m_uiMainPanel.height = 10f + (UIServiceBar.DEFAULT_HEIGHT * ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing) * 25 + 10f;
             for (int i = 0; i < 25; i++)
             {
-                m_uiBarPosition[i].Panel.relativePosition = new Vector3(10f, 60f + i * (UIServiceBar.DEFAULT_HEIGHT * ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing));
+                m_uiBarPosition[i].Panel.relativePosition = new Vector3(10f, 10f + i * (UIServiceBar.DEFAULT_HEIGHT * ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing));
                 m_uiBarPosition[i].SetScale(ShowIt2Config.Instance.Scaling);
             }
         }
@@ -1144,6 +1157,7 @@ namespace ShowIt2
             m_uiServices[ImmaterialResourceManager.Resource.ElderCare].Panel.Hide();
             m_uiServices[ImmaterialResourceManager.Resource.Health].Panel.Hide();
             m_uiServices[ImmaterialResourceManager.Resource.Wellbeing].Panel.Hide();
+            m_uiServices[                                   WaterProximity].Panel.Hide();
             m_uiServices[ImmaterialResourceManager.Resource.FireHazard].Panel.Hide();
             m_uiServices[ImmaterialResourceManager.Resource.CrimeRate].Panel.Hide();
             RescaleServiceBars(70f); // max is 50&100
@@ -1316,6 +1330,7 @@ namespace ShowIt2
             m_uiServices[ImmaterialResourceManager.Resource.ElderCare].Panel.Hide();
             m_uiServices[ImmaterialResourceManager.Resource.Health].Panel.Hide();
             m_uiServices[ImmaterialResourceManager.Resource.Wellbeing].Panel.Hide();
+            m_uiServices[                                   WaterProximity].Panel.Hide();
             m_uiServices[ImmaterialResourceManager.Resource.FireHazard].Panel.Hide();
             m_uiServices[ImmaterialResourceManager.Resource.CrimeRate].Panel.Hide();
             RescaleServiceBars(50f); // max is 33
@@ -1432,6 +1447,28 @@ namespace ShowIt2
             //_progBotValue.tooltip = "";
         }
 
+        // Health and Wellbeing have different formulas
+        // If they are between 40 and 60 then their contribution is 0, below 40 is negative and above 60 is positive
+        private int ProcessHealthWellbeing(
+            ushort[] resources, int index, // from CheckLocalResources
+            ImmaterialResourceManager.Resource resourceType, // resource type
+                                                             //int resourceRate, // not needed - taken from resources
+            int middleRate, int maxRate, int middleEffect, int maxEffect) // params for CalculateResourceEffect
+        {
+            int resourceRate = resources[index + (int)resourceType];
+            int valueAbove = ImmaterialResourceManager.CalculateResourceEffect(resourceRate, middleRate, maxRate, middleEffect, maxEffect);
+            int valueBelow = ImmaterialResourceManager.CalculateResourceEffect(maxRate-resourceRate, middleRate, maxRate, middleEffect, maxEffect);
+            UIServiceBar uiBar = m_uiServices[resourceType];
+            bool isNeg = (resourceRate < maxRate / 2);
+            uiBar.Negative = isNeg;
+            uiBar.BelowMid = false; // below middle rate gives 0, so there will be no bar anyway...
+            uiBar.ShowFloats();
+            uiBar.MaxValue = (float)maxEffect / 10f; // always 10 for Land Value
+            uiBar.Value = (isNeg ? (float)valueBelow / 10f : (float)valueAbove / 10f );
+            uiBar.Panel.tooltip = $"{resourceType}: rate={resourceRate} midMax={middleRate}->{maxRate} effect={middleEffect}->{maxEffect} div=10";
+            return isNeg ? -valueBelow : valueAbove;
+        }
+
         private int ShowLandValue(ushort buildingID, ref Building data)
         {
             // UI adjustment
@@ -1470,6 +1507,17 @@ namespace ShowIt2
             value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.FireHazard, 50, 100, 10, 50, 10, true);
             value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.Abandonment, 15, 50, 100, 200, 10, true); // there is no UI overlay for that, -20
 
+            // health and wellbeing
+            value += ProcessHealthWellbeing(resources, index, ImmaterialResourceManager.Resource.Health, 60, 100, 0, 50);
+            value += ProcessHealthWellbeing(resources, index, ImmaterialResourceManager.Resource.Wellbeing, 60, 100, 0, 50);
+
+            /*
+            num15 += CalculateResourceEffect(num11, 60, 100, 0, 50); // Health = 10,
+            num15 -= CalculateResourceEffect(100 - num11, 60, 100, 0, 50);
+            num15 += CalculateResourceEffect(num12, 60, 100, 0, 50); // 	Wellbeing = 11,
+            num15 -= CalculateResourceEffect(100 - num12, 60, 100, 0, 50);
+            */
+
             value /= 10;
 
             // water proximity
@@ -1478,6 +1526,7 @@ namespace ShowIt2
             // if water < 33 then proportional to 300, if > 33 then reverse proportional i.e. 0 -> 300 -> 0
             // ideal water adds +30 $$
             int waterValue = realValue - value;
+            ProcessServiceValue(resources, index, WaterProximity, 150, 300, 150, 300, 10, false, waterValue*10); // output value is ignored
             //Debug.Log($"ShowIt2.ShowLandValue: value={value} real={realValue} water={waterValue}");
             return waterValue;
         }

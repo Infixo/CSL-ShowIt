@@ -117,7 +117,7 @@ namespace ShowIt2
         public bool ShowPanel { get; set; } = true;
         public string Alignment { get; set; } = "Right";
         public float Scaling { get; set; } = 13f/16f;
-        public float Spacing { get; set; } = 2f;
+        public float Spacing { get; set; } = 1f;
 
         private static ShowIt2Config instance;
 
