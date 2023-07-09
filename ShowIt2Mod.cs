@@ -9,11 +9,10 @@ namespace ShowIt2
 {
     public class ShowIt2Mod : LoadingExtensionBase, IUserMod
     {
-        public string Name => "Show It 2!";
+        public string Name => "Show It 2! (v0.2)";
         public string Description => "Shows service coverage, land value and details about leveling for zoned buildings.";
 
         private static GameObject m_goPanel;
-        //private LoadMode _loadMode;
         public static ShowIt2Panel Panel { get { return m_goPanel?.GetComponent<ShowIt2Panel>(); } }
 
         public void OnEnabled()
@@ -64,7 +63,7 @@ namespace ShowIt2
 
             AssemblyName assemblyName = Assembly.GetExecutingAssembly().GetName();
 
-            group = helper.AddGroup(Name + " - " + assemblyName.Version.Major + "." + assemblyName.Version.Minor);
+            group = helper.AddGroup(Name + " - " + assemblyName.Version.Major + "." + assemblyName.Version.Minor + "." + assemblyName.Version.Build);
 
             int selectedIndex;
             float selectedValue;

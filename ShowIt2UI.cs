@@ -2,112 +2,49 @@
 using System.Linq;
 using UnityEngine;
 using ColossalFramework.UI;
-//using System.ComponentModel;
-//using System.Reflection.Emit;
-//using static System.Net.Mime.MediaTypeNames;
 
 namespace ShowIt2
 {
-
-        public static class UIFonts
-        {
-            private static UIFont m_regular;
-            private static UIFont m_semiBold;
-
-            public static UIFont Regular
-            {
-                get
-                {
-                    if (m_regular == null)
-                    {
-                        m_regular = Resources.FindObjectsOfTypeAll<UIFont>().FirstOrDefault((UIFont f) => f.name == "OpenSans-Regular");
-                    }
-                    return m_regular;
-                }
-            }
-
-            public static UIFont SemiBold
-            {
-                get
-                {
-                    if (m_semiBold == null)
-                    {
-                        m_semiBold = Resources.FindObjectsOfTypeAll<UIFont>().FirstOrDefault((UIFont f) => f.name == "OpenSans-Semibold");
-                    }
-                    return m_semiBold;
-                }
-            }
-        }
-    //public class UIUtils
-    // Infixo todo: create slider for showing progress with level tresholds
-    // Infixo todo: create slider for showing value of the immaterial resource effect
-    //{
-    /*public static UIFont GetUIFont(string name)
+    public static class UIFonts // this gist is from from AlgernonCommons
     {
-        UIFont[] fonts = Resources.FindObjectsOfTypeAll<UIFont>();
+        private static UIFont m_regular;
+        private static UIFont m_semiBold;
 
-        foreach (UIFont font in fonts)
+        public static UIFont Regular
         {
-            if (font.name.CompareTo(name) == 0)
+            get
             {
-                return font;
+                if (m_regular == null)
+                {
+                    m_regular = Resources.FindObjectsOfTypeAll<UIFont>().FirstOrDefault((UIFont f) => f.name == "OpenSans-Regular");
+                }
+                return m_regular;
             }
         }
 
-        return null;
-    }*/
+        public static UIFont SemiBold
+        {
+            get
+            {
+                if (m_semiBold == null)
+                {
+                    m_semiBold = Resources.FindObjectsOfTypeAll<UIFont>().FirstOrDefault((UIFont f) => f.name == "OpenSans-Semibold");
+                }
+                return m_semiBold;
+            }
+        }
+    }
 
-    /*public static UIPanel CreatePanel(UIComponent parent, string name)
-    {
-        UIPanel panel = parent.AddUIComponent<UIPanel>();
-        panel.name = name;
-
-        return panel;
-    }*/
-
-    /*public static UISprite CreateSprite(UIComponent parent, string name, string spriteName)
+    /*
+    public static UISprite CreateSprite(UIComponent parent, string name, string spriteName)
     {
         UISprite sprite = parent.AddUIComponent<UISprite>();
         sprite.name = name;
         sprite.spriteName = spriteName;
 
         return sprite;
-    }*/
-
-    /*public static UILabel CreateLabel(UIComponent parent, string name, string text)
-    {
-        UILabel label = parent.AddUIComponent<UILabel>();
-        //label.textAlignment = UIHorizontalAlignment.Center; // Infixo: looks like a default for all labels
-        label.name = name;
-        label.text = text;
-
-        return label;
-    }*/
-
-
-    /*public static UIRadialChart CreateTwoSlicedRadialChart(UIComponent parent, string name)
-    {
-        UIRadialChart radialChart = parent.AddUIComponent<UIRadialChart>();
-        radialChart.name = name;
-
-        radialChart.size = new Vector3(50f, 50f);
-        radialChart.spriteName = "PieChartBg";
-
-        radialChart.AddSlice();
-        UIRadialChart.SliceSettings slice = radialChart.GetSlice(0);
-        Color32 color = new Color32(229, 229, 229, 128);
-        slice.outterColor = color;
-        slice.innerColor = color;
-
-        radialChart.AddSlice();
-        UIRadialChart.SliceSettings slice1 = radialChart.GetSlice(1);
-        Color32 color1 = new Color32(178, 178, 178, 128);
-        slice1.outterColor = color1;
-        slice1.innerColor = color1;
-
-        return radialChart;
-    }*/
-    //}
+    }
+    */
 
     // UI control to show the service coverage using a progress bar
     // The value is shown propotionally to the max-value
@@ -126,15 +63,12 @@ namespace ShowIt2
         private Color m_completeColor = Color.green;
         private Color m_disabledColor = Color.gray;
 
-        // internals
-        //private bool m_disabled = false;
+        // data
         private bool m_negative = false;
-        //private string m_text = "Text";
         private float m_value = 0f;
         private float m_maxValue = 0.5f; // progress bar filled 100%
         private float m_limit = 1f; // possible maxValue that will fill 100% entire control
         private bool m_belowMid = false;
-        //private bool m_intValues = true;
 
         // ui components
         private UIPanel m_uiPanel;
@@ -216,29 +150,27 @@ namespace ShowIt2
             m_uiTextLabel.font = UIFonts.Regular;
             m_uiTextLabel.textAlignment = UIHorizontalAlignment.Left;
             m_uiTextLabel.relativePosition = new Vector3(0f, 0f);
-            m_uiTextLabel.textScale = m_uiScale; // Infixo todo: connect with options
+            m_uiTextLabel.textScale = m_uiScale;
             m_uiTextLabel.disabledTextColor = m_disabledColor;
 
             // value
             m_uiValueLabel = m_uiPanel.AddUIComponent<UILabel>();
             m_uiValueLabel.name = name + "Value";
             m_uiValueLabel.font = UIFonts.Regular;
-            //m_uiValueLabel.width = m_uiValueWidth;
-            //m_uiValueLabel.textAlignment = UIHorizontalAlignment.Left;
             m_uiValueLabel.relativePosition = new Vector3(m_uiTextWidth, 0f);
-            m_uiValueLabel.textScale = m_uiScale; // Infixo todo: connect with options
+            m_uiValueLabel.textScale = m_uiScale;
             m_uiValueLabel.disabledTextColor = m_disabledColor;
 
             // bar
             m_uiValueBar = m_uiPanel.AddUIComponent<UIProgressBar>();
             m_uiValueBar.name = name + "ValueBar";
             m_uiValueBar.relativePosition = new Vector3(m_uiTextWidth + m_uiValueWidth, 0);
-            m_uiValueBar.width = 200;
-            m_uiValueBar.height = DEFAULT_HEIGHT * m_uiScale - 1f; // Infixo todo: options
+            m_uiValueBar.width = 200f;
+            m_uiValueBar.height = DEFAULT_HEIGHT * m_uiScale - 1f;
             m_uiValueBar.progressColor = m_progressColor;
-            m_uiValueBar.progressSprite = "LevelBarForeground"; // economy panel uses PlainWhite
+            m_uiValueBar.progressSprite = "LevelBarForeground"; // same as LevelBar in the ZonedInfoView
             m_uiValueBar.backgroundSprite = "LevelBarBackground";
-            m_uiValueBar.fillMode = UIFillMode.Fill;
+            m_uiValueBar.fillMode = UIFillMode.Fill; // this is IMPORTANT! default is Stretch which causes 0 to be shown as a thin bar!
             m_uiValueBar.value = 0.5f;
             m_uiValueBar.disabledColor = m_disabledColor;
 
@@ -249,7 +181,7 @@ namespace ShowIt2
             m_uiMaxValueLabel.width = m_uiValueWidth;
             m_uiMaxValueLabel.textAlignment = UIHorizontalAlignment.Center;
             m_uiMaxValueLabel.relativePosition = new Vector3(370f, 0);
-            m_uiMaxValueLabel.textScale = m_uiScale; // Infixo todo: connect with options
+            m_uiMaxValueLabel.textScale = m_uiScale;
             m_uiMaxValueLabel.disabledTextColor = m_disabledColor;
         }
 
@@ -286,7 +218,8 @@ namespace ShowIt2
             m_uiValueBar.progressColor = (m_negative ? m_negativeColor : (m_belowMid ? m_belowMidColor : m_progressColor));
             if (m_value >= m_maxValue && !m_negative) m_uiValueBar.progressColor = m_completeColor;
         }
-    }
+
+    } // UIServiceBar
 
     // UI control to show the level progress using multiple (max. 5) progress bars of various size
     // The value is shown propotionally to the max value
@@ -299,41 +232,30 @@ namespace ShowIt2
         private const float TEXT_WIDTH = 80f; // 45f + 120f * DEFAULT_SCALE;
         private const float VALUE_WIDTH = 6f + 18f * DEFAULT_SCALE;
         public const float DEFAULT_HEIGHT = 13f; // 1f + 17f * DEFAULT_SCALE;
-        // internals
-        //private Color m_negativeColor = Color.red;
-        //private Color m_positiveColor = Color.green;
-        //private Color m_belowMidColor = Color.yellow;
+
         private Color m_progressColor = new Color32(0, 231, 241, byte.MaxValue);
         private Color m_completeColor = Color.green;
-        //private Color m_disabledColor = Color.gray;
-        //private bool m_disabled = false;
-        //private bool m_negative = false;
-        //private string m_text = "Text";
+
+        // data
         private float m_value = 0f;
-        private float[] m_maxValues = new float[MAX_PARTS]; // progress bar filled 100%
+        private readonly float[] m_maxValues = new float[MAX_PARTS]; // progress bar filled 100%
         private int m_parts = MAX_PARTS;
-        //private float m_limit = 1f; // possible maxValue that will fill 100% entire control
-        //private bool m_belowMid = false;
+
         // ui components
         private UIPanel m_uiPanel;
         private UILabel m_uiTextLabel;
         private UILabel m_uiValueLabel;
         private UIProgressBar[] m_uiValueBars = new UIProgressBar[MAX_PARTS];
         private UILabel[] m_uiMidLabels = new UILabel[MAX_PARTS]; // last one will not be shown, but it is easier to iterate like this
+        private UISprite m_icon;
 
         // properties
 
-        public UIPanel Panel { get { return m_uiPanel; } } // this is actually component in UICustomControl
+        public UIPanel Panel { get { return m_uiPanel; } } // this could be component in UICustomControl
 
-        public string Text
-        {
-            set { m_uiTextLabel.text = value; }
-        }
+        public string Text { set { m_uiTextLabel.text = value; } }
 
-        public float Value
-        {
-            set { m_value = value; m_uiValueLabel.text = m_value.ToString();  UpdateControl(); }
-        }
+        public float Value { set { m_value = value; m_uiValueLabel.text = m_value.ToString();  UpdateControl(); } }
 
         public float[] MaxValues
         {
@@ -358,10 +280,9 @@ namespace ShowIt2
                 UpdateControl();
             }
         }
-        public float Width
-        {
-            set { m_uiPanel.width = value; UpdateControl(); }
-        }
+        public float Width { set { m_uiPanel.width = value; UpdateControl(); } }
+
+        public bool Happy { set { m_icon.spriteName = "NotificationIcon" + (value ? "Happy" : "Unhappy"); } }
 
         public UILevelProgress(UIComponent parent, string name)
         {
@@ -396,7 +317,7 @@ namespace ShowIt2
                 bar.progressColor = m_progressColor;
                 bar.progressSprite = "LevelBarForeground"; // economy panel uses PlainWhite
                 bar.backgroundSprite = "LevelBarBackground";
-                bar.fillMode = UIFillMode.Fill;
+                bar.fillMode = UIFillMode.Fill; // IMPORTANT! otherwise shows 0 as a thin bar!
                 bar.value = 0.5f;
                 m_uiValueBars[i] = bar;
             }
@@ -405,16 +326,20 @@ namespace ShowIt2
             for (int i = 0; i < MAX_PARTS; i++)
             {
                 UILabel lbl = m_uiPanel.AddUIComponent<UILabel>();
-                //m_uiMaxValueLabel = m_uiPanel.AddUIComponent<UILabel>();
                 lbl.name = "MidLabel" + i;
                 lbl.font = UIFonts.Regular;
                 lbl.width = VALUE_WIDTH;
-                //lbl.textAlignment = UIHorizontalAlignment.Center;
                 lbl.relativePosition = new Vector3(50f * (i+1), DEFAULT_HEIGHT + 12f + 2f);
-                lbl.textScale = SMALL_SCALE; // Infixo todo: connect with options
+                lbl.textScale = SMALL_SCALE;
                 m_uiMidLabels[i] = lbl;
             }
-            //m_uiMidLabels[m_parts].isVisible = false;
+
+            // icon
+            m_icon = m_uiPanel.AddUIComponent<UISprite>();
+            m_icon.name = "Icon";
+            m_icon.size = new Vector2(20f, 20f);
+            m_icon.relativePosition = new Vector3(-23f, 3f);
+            m_icon.spriteName = "NotificationIconHappy"; // "NotificationIcon" + { "VeryUnhappy", "Unhappy", "Happy", "VeryHappy", "ExtremelyHappy" };
         }
 
         private void UpdateControl()
@@ -435,10 +360,8 @@ namespace ShowIt2
                 lbl.text = m_maxValues[i].ToString();
             }
 
-            // iterate through bars, resize and show progress accordingly
+            // iterate through bars, show progress accordingly
             float shown = 0f; // how much already shown
-            //foreach (UIProgressBar bar in m_uiValueBars)
-                //bar.value = 0f; // quickly reset all
             for (int i = 0; i < MAX_PARTS; i++)
             {
                 UIProgressBar bar = m_uiValueBars[i];
@@ -468,12 +391,6 @@ namespace ShowIt2
                 }
             }
 
-            // show/hide
-            //for (int i = 0; i < MAX_PARTS; i++)
-            //{
-                //m_uiValueBars[i].isVisible = (i < m_parts);
-                //m_uiMidLabels[i].isVisible = (i < m_parts);
-            //}
             m_uiMidLabels[m_parts-1].Hide(); // last one is always hidden
         }
 

@@ -4,13 +4,16 @@ using UnityEngine;
 using ColossalFramework;
 using ColossalFramework.UI;
 using ColossalFramework.Globalization;
-
-// Alias the Enum: You can create an alias for an existing enum by using the using directive. 
-using ImmaterialResource = ImmaterialResourceManager.Resource;
-using static System.Net.Mime.MediaTypeNames;
-using UnityEngine.SocialPlatforms;
+using Epic.OnlineServices.Connect;
+using ColossalFramework.Plugins;
+using System.Reflection;
+using ICities;
+using static NetInfo;
 using static Citizen;
-using static PathUnit;
+//using static System.Net.Mime.MediaTypeNames;
+//using UnityEngine.SocialPlatforms;
+//using static Citizen;
+//using static PathUnit;
 
 namespace ShowIt2
 {
@@ -20,129 +23,48 @@ namespace ShowIt2
         public const ImmaterialResourceManager.Resource WaterProximity = (ImmaterialResourceManager.Resource)253; // Water proximity does not exists in IRM but it is used to calculate land value
         public const ImmaterialResourceManager.Resource GroundPollution = (ImmaterialResourceManager.Resource)254; // Ground Pollution does not exists in IRM but it is used to calculate service coverage value
 
-        //private bool _initialized;
+        //private bool m_hardMode = false;
+
+        public enum Zone { R = 0, I, C, O };
+
+        private readonly float[][] MAX_VALUES_TOPBAR = new float[][] {
+            // education and wealth are not changed by HardMode
+            new float[] { 15f, 30f, 45f, 60f, 75f }, // R
+            new float[] { 15f, 30f, 45f }, // I
+            new float[] { 30f, 45f, 60f }, // C
+            new float[] { 15f, 30f, 45f }, // O
+        };
+
+        private readonly float[][] MAX_VALUES_NORMAL = new float[][] {
+            new float[] { 6f, 21f, 41f, 61f, 75f }, // Residential, land value
+            new float[] { 30f, 60f, 90f }, // Industrial, services
+            new float[] { 21f, 41f, 61f }, // Commercial, land value
+            new float[] { 45f, 90f, 135f }, // Office, services
+        };
+
+        private readonly float[][] MAX_VALUES_HARDMODE = new float[][] {
+            // service coverage and land values are higher in hard mode
+            new float[] { 15f, 35f, 60f, 85f, 105f }, // Residential, land value
+            new float[] { 40f, 80f, 120f }, // Industrial, services
+            new float[] { 30f, 60f, 90f }, // Commercial, land value
+            new float[] { 55f, 110f, 165f }, // Office, services
+        };
+
+        private float[][] MAX_VALUES_BOTBAR;
 
         private ZonedBuildingWorldInfoPanel m_uiZonedBuildingWorldInfoPanel;
-        //private UIPanel _makeHistoricalPanel;
         private UICheckBox m_showPanelCheckBox;
         private UIPanel m_uiMainPanel;
         // leveling progress - wealth, education section
         private UILevelProgress m_topBar;
-        //private UILabel _progTopName; // education or wealth
-        //private UILabel _progTopProgress; // number 1..15
-        //private UILabel _progTopValue; // actual value number
-        // Infixo: todo slider showing nicely the progress and tresholds for various levels
         // leveling progress - land value, service coverage
         private UILevelProgress m_botBar;
-        //private UILabel _progBotName; // land value or service coverage
-        //private UILabel _progBotProgress; // number 1..15
-        //private UILabel _progBotValue; // actual value number
-        // Infixo: todo slider showing nicely the progress and tresholds for various levels
         // resource value bars
         private Dictionary<ImmaterialResourceManager.Resource, UIServiceBar> m_uiServices = new Dictionary<ImmaterialResourceManager.Resource, UIServiceBar>();
         private UIServiceBar[] m_uiBarPosition = new UIServiceBar[25];
 
+        public void Start() => CreateUI();
 
-        //private const int MaxNumberOfCharts = 17;
-
-        /*public void Awake()
-        {
-            try
-            {
-                //_charts = new Dictionary<int, UIRadialChart>();
-                //_numbers = new Dictionary<int, UILabel>();
-                //_maxVals = new Dictionary<int, UILabel>();
-                //_icons = new Dictionary<int, UISprite>();
-                //_labels = new Dictionary<int, UILabel>();
-                //m_uiServices = new Dictionary<ImmaterialResourceManager.Resource, UIServiceBar>();
-
-                //_effectsOnZonedBuilding = new Dictionary<int, float>();
-                //_maxEffectsOnZonedBuilding = new Dictionary<int, float>();
-            }
-            catch (Exception e)
-            {
-                Debug.Log("[Show It!] ShowIt2Panel:Awake -> Exception: " + e.Message);
-            }
-        }*/
-
-        public void Start()
-        {
-            CreateUI();
-        }
-
-        /*public void OnSetTarget(ushort buildingID)
-        {
-            
-            ushort hackedID = ((InstanceID)m_uiZonedBuildingWorldInfoPanel
-                    .GetType()
-                    .GetField("m_InstanceID", BindingFlags.NonPublic | BindingFlags.Instance)
-                    .GetValue(m_uiZonedBuildingWorldInfoPanel))
-                    .Building;
-            
-            //Debug.Log($"ShowIt2.ShowIt2Panel.OnSetTarget: passed id={buildingID} hacked id={hackedID}");
-            if (m_uiMainPanel.isVisible)
-                RefreshData();
-        }*/
-
-        /*public void Update()
-        {
-            //try
-            //{
-            //if (!_initialized || ShowIt2Config.Instance.ConfigUpdated)
-            //{
-                //UpdateUI();
-
-                //_initialized = true;
-                //ShowIt2Config.Instance.ConfigUpdated = false;
-            //}
-
-            //if (m_uiZonedBuildingWorldInfoPanel.component.isVisible && m_uiMainPanel.isVisible)
-            //{
-            //_cachedBuildingID = 0;
-            //}
-            //else
-            //{
-            //RefreshData();
-            //}
-            //}
-            //catch (Exception e)
-            //{
-            //Debug.Log("[Show It!] ShowIt2Panel:Update -> Exception: " + e.Message);
-            //}
-        }*/
-
-        /*public void OnDestroy()
-        {
-            //try
-            //{
-            for (var i = 0; i < MaxNumberOfCharts; i++)
-            {
-                Destroy(_charts[i]);
-                Destroy(_numbers[i]);
-                Destroy(_maxVals[i]); // Infixo
-                Destroy(_icons[i]);
-                Destroy(_labels[i]);
-            }
-            //if (_header != null)
-            //{
-            //Destroy(_header);
-            //}
-            if (m_uiMainPanel != null)
-            {
-                Destroy(m_uiMainPanel);
-            }
-            if (m_showPanelCheckBox != null)
-            {
-                Destroy(m_showPanelCheckBox);
-            }
-            // Infixo todo: add Destroy for other labels
-            // Infixo todo: destroy service bars
-            //}
-            //catch (Exception e)
-            //{
-            //Debug.Log("[Show It!] ShowIt2Panel:OnDestroy -> Exception: " + e.Message);
-            //}
-        }*/
         private UICheckBox CreateCheckBox(UIComponent parent, string name, string text, bool state)
         {
             UICheckBox checkBox = parent.AddUIComponent<UICheckBox>();
@@ -201,6 +123,17 @@ namespace ShowIt2
 
         public void CreateUI()
         {
+            MAX_VALUES_BOTBAR = MAX_VALUES_NORMAL;
+            // Check if HardMode plugin is ON
+            // item.name - it is folder name where the mod resides, e.g. SteamID for workshop mods
+            // (item.userModInstance as IUserMod).Name - mod's native name
+            foreach (PluginManager.PluginInfo item in Singleton<PluginManager>.instance.GetPluginsInfo())
+                if (item.isBuiltin && item.isEnabled && item.name == "HardMode")
+                {
+                    Debug.Log($"ShowIt2: HardMode enabled");
+                    MAX_VALUES_BOTBAR = MAX_VALUES_HARDMODE;
+                }
+
             m_uiZonedBuildingWorldInfoPanel = GameObject.Find("(Library) ZonedBuildingWorldInfoPanel").GetComponent<ZonedBuildingWorldInfoPanel>();
 
             m_uiMainPanel = m_uiZonedBuildingWorldInfoPanel.component.AddUIComponent<UIPanel>();
@@ -225,7 +158,7 @@ namespace ShowIt2
             m_showPanelCheckBox.label.textColor = new Color32(185, 221, 254, 255);
             m_showPanelCheckBox.label.textScale = 0.8125f;
             m_showPanelCheckBox.label.font = UIFonts.Regular;
-            m_showPanelCheckBox.tooltip = "Indicators will show how well serviced the building is and what problems might prevent the building from leveling up.";
+            m_showPanelCheckBox.tooltip = "Indicators show how well serviced the building is (for Industrial and Office) or what contributes to the Land Value (for Residential and Commercial)";
             //m_showPanelCheckBox.AlignTo(_makeHistoricalPanel, UIAlignAnchor.TopLeft);
             m_showPanelCheckBox.relativePosition = new Vector3(_makeHistoricalPanel.width - m_showPanelCheckBox.width, 6f);
             m_showPanelCheckBox.eventCheckChanged += (component, value) =>
@@ -237,35 +170,11 @@ namespace ShowIt2
             };
 
             // leveling progress - wealth, education section
-            /*
-            _progTopName = m_uiMainPanel.AddUIComponent<UILabel>(); // label: "education" or "wealth"
-            _progTopName.name = "ShowIt2TopNameLabel";
-            _progTopProgress = m_uiMainPanel.AddUIComponent<UILabel>(); // label: level of progress, number 1..15
-            _progTopProgress.name = "ShowIt2TopProgressLabel";
-            _progTopValue = m_uiMainPanel.AddUIComponent<UILabel>(); // label: actual value
-            _progTopValue.name = "ShowItPanelProgTopValue";
-            _progTopName.relativePosition = new Vector3(10, 10);// education or wealth
-            _progTopProgress.relativePosition = new Vector3(150, 10); // number 1..15
-            _progTopValue.relativePosition = new Vector3(200, 10); // actual value number
-            */
-            // Infixo: todo slider showing nicely the progress and tresholds for various levels
             m_topBar = new UILevelProgress(m_uiZonedBuildingWorldInfoPanel.component, "ShowIt2TopLevelBar");
             m_topBar.Width = 185f;
             m_topBar.Panel.relativePosition = new Vector3(255f, 104f);
 
             // leveling progress - land value, service coverage
-            /*
-            _progBotName = m_uiMainPanel.AddUIComponent<UILabel>(); // label: "land value" or "service coverage"
-            _progBotName.name = "ShowIt2BotNameLabel";
-            _progBotProgress = m_uiMainPanel.AddUIComponent<UILabel>(); // number 1..15
-            _progBotProgress.name = "ShowIt2BotProgressLabel";
-            _progBotValue = m_uiMainPanel.AddUIComponent<UILabel>(); // actual value number
-            _progBotValue.name = "ShowIt2BotValueLabel";
-            _progBotName.relativePosition = new Vector3(10, 30); // land value or service coverage
-            _progBotProgress.relativePosition = new Vector3(150, 30); // number 1..15
-            _progBotValue.relativePosition = new Vector3(200, 30); // actual value number
-            */
-            // Infixo: todo slider showing nicely the progress and tresholds for various levels
             m_botBar = new UILevelProgress(m_uiZonedBuildingWorldInfoPanel.component, "ShowIt2BotLevelBar");
             m_botBar.Width = 185f;
             m_botBar.Panel.relativePosition = new Vector3(255f, 142f);
@@ -318,60 +227,14 @@ namespace ShowIt2
         // Resizes the panel and places the controls according to current settings
         public void UpdateUI()
         {
-            //try
-            //{
-            // Infixo: progress section
-            //_header.relativePosition = new Vector3(m_uiMainPanel.width / 2f - _header.width / 2f, _header.height / 2f + 5f);
-            // Infixo: new section showing leveling progress
-            // leveling progress - wealth, education section
-            /*
-            _progTopName.relativePosition = new Vector3(10, 10);// education or wealth
-            _progTopProgress.relativePosition = new Vector3(150, 10); // number 1..15
-            _progTopValue.relativePosition = new Vector3(200, 10); // actual value number
-                                                                   // Infixo: todo slider showing nicely the progress and tresholds for various levels
-                                                                   // leveling progress - land value, service coverage
-            _progBotName.relativePosition = new Vector3(10, 30); // land value or service coverage
-            _progBotProgress.relativePosition = new Vector3(150, 30); // number 1..15
-            _progBotValue.relativePosition = new Vector3(200, 30); // actual value number
-                                                                   // Infixo: todo slider showing nicely the progress and tresholds for various levels
-            */
-            //int rows;
-            //int columns;
-            //float horizontalSpacing = ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing;
-            //float verticalSpacing = ShowIt2Config.Instance.Spacing;
-            //float topSpacing = 40f; // Infixo: move all controls 300 down 60f + position * (UIServiceBar.DEFAULT_HEIGHT + 2f)
-            //float bottomSpacing = 15f;
-            //float horizontalPadding = 0f;
-            //float verticalPadding = 0f;
-
             if (ShowIt2Config.Instance.Alignment is "Right")
             {
-                //rows = Mathf.FloorToInt((m_uiMainPanel.parent.height - topSpacing - bottomSpacing - verticalSpacing) / (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing));
-                //columns = Mathf.CeilToInt((float)MaxNumberOfCharts / rows);
-
-                //m_uiMainPanel.AlignTo(m_uiMainPanel.parent, UIAlignAnchor.TopRight);
-                //m_uiMainPanel.width = columns * (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing);
-                //m_uiMainPanel.height = m_uiMainPanel.parent.height - bottomSpacing;
                 m_uiMainPanel.relativePosition = new Vector3(m_uiMainPanel.parent.width + 1f, 0f);
-
-                //horizontalPadding = ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing / 2f;
-                //verticalPadding = (m_uiMainPanel.parent.height - topSpacing - bottomSpacing - rows * (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing)) / 2f;
             }
             else
             {
-                //columns = Mathf.FloorToInt((m_uiMainPanel.parent.width - horizontalSpacing) / (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing));
-                //rows = Mathf.CeilToInt((float)MaxNumberOfCharts / columns);
-
-                //m_uiMainPanel.AlignTo(m_uiMainPanel.parent, UIAlignAnchor.BottomLeft);
-                //m_uiMainPanel.width = m_uiMainPanel.parent.width;
-                //m_uiMainPanel.height = rows * (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing) + topSpacing + bottomSpacing;
                 m_uiMainPanel.relativePosition = new Vector3(0f, m_uiMainPanel.parent.height - 14f); // there some issue with ZonedInfoView, its height is bigger that actual window
-
-                //horizontalPadding = (m_uiMainPanel.parent.width - columns * (ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.IndicatorsPanelChartHorizontalSpacing)) / 2f;
-                //verticalPadding = ShowIt2Config.Instance.Spacing / 2f;
             }
-            // Infixo todo: FIX change later!!!!
-            //m_uiMainPanel.height = m_uiMainPanel.height + 25f * 17;
             m_uiMainPanel.height = 10f + (UIServiceBar.DEFAULT_HEIGHT * ShowIt2Config.Instance.Scaling + ShowIt2Config.Instance.Spacing) * 25 + 10f;
             for (int i = 0; i < 25; i++)
             {
@@ -379,140 +242,6 @@ namespace ShowIt2
                 m_uiBarPosition[i].SetScale(ShowIt2Config.Instance.Scaling);
             }
         }
-
-        /*private void SetCharts(ImmaterialResourceManager.Resource[] resources)
-        {
-            try
-            {
-                int chartIndex = 0;
-
-                for (var i = 0; i < resources.Length; i++)
-                {
-                    if (IsIndicatorAvailable(resources[i]))
-                    {
-                        //SetChart(chartIndex, resources[i]);
-                        chartIndex++;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.Log("[Show It!] ShowIt2Panel:SetCharts -> Exception: " + e.Message);
-            }
-        }*/
-
-        /*private void SetChart(int index, ImmaterialResourceManager.Resource resource)
-        {
-            try
-            {
-                int resourceKey = (int)resource;
-                //float resourceEffect = _effectsOnZonedBuilding[resourceKey];
-                //float resourceMaxEffect = _maxEffectsOnZonedBuilding[resourceKey];
-                float resourceEffectPercentage = resourceEffect / resourceMaxEffect;
-
-                Color32 colorRed = new Color32(241, 136, 136, 255);
-                Color32 colorYellow = new Color32(251, 212, 0, 255);
-                Color32 colorDarkGreen = new Color32(141, 149, 55, 255);
-                Color32 colorLightGreen = new Color32(131, 213, 141, 255);
-                Color32 color;
-
-                if (resourceEffectPercentage > 0.75f)
-                {
-                    color = IsIndicatorPositive(resource) ? colorLightGreen : colorRed;
-                }
-                else if (resourceEffectPercentage > 0.50f)
-                {
-                    color = IsIndicatorPositive(resource) ? colorDarkGreen : colorRed;
-                }
-                else if (resourceEffectPercentage > 0.25f)
-                {
-                    color = IsIndicatorPositive(resource) ? colorYellow : colorRed;
-                }
-                else
-                {
-                    color = IsIndicatorPositive(resource) ? colorRed : colorRed;
-                }
-
-                _charts[index].GetSlice(0).outterColor = color;
-                _charts[index].GetSlice(0).innerColor = color;
-
-                _charts[index].SetValues(resourceEffectPercentage, 1 - resourceEffectPercentage);
-                _charts[index].tooltip = GetResourceName(resource);
-                _charts[index].objectUserData = resource;
-                _charts[index].isVisible = true;
-
-                _numbers[index].text = $"{Math.Round(resourceEffectPercentage * 100f),1}%";
-                _numbers[index].relativePosition = new Vector3(_charts[index].width / 2f - _numbers[index].width / 2f, _charts[index].height / 2f - _numbers[index].height / 2f - 10); // Infixo todo: better placing
-                _numbers[index].isVisible = true;
-
-                _maxVals[index].text = "0"; // Infixo todo?
-                _maxVals[index].relativePosition = new Vector3(_charts[index].width / 2f - _numbers[index].width / 2f, _charts[index].height / 2f - _numbers[index].height / 2f + 10);
-                _maxVals[index].isVisible = true;
-
-                _icons[index].spriteName = GetIndicatorSprite(resource);
-                _icons[index].tooltip = GetResourceName(resource);
-
-                _labels[index].text = GetResourceName(resource).Substring(0, 4) + ".";
-                _labels[index].tooltip = GetResourceName(resource);
-
-                //if (ShowIt2Config.Instance.IndicatorsPanelLegend is "Icons")
-                //{
-                //_icons[index].position = new Vector3(_charts[index].width / 2f - _icons[index].width / 2f, 0f - (ShowIt2Config.Instance.Scaling / 1.25f));
-                //_icons[index].isVisible = true;
-                //}
-                //else if (ShowIt2Config.Instance.IndicatorsPanelLegend is "Labels")
-                //{
-                //_labels[index].position = new Vector3(_charts[index].width / 2f - _labels[index].width / 2f, 0f - ShowIt2Config.Instance.Scaling);
-                //_labels[index].isVisible = true;
-                //}
-                //else
-                //{
-                //_icons[index].position = new Vector3(_charts[index].width / 2f - _icons[index].width / 2f, 0f - (ShowIt2Config.Instance.Scaling / 1.75f));
-                //_labels[index].position = new Vector3(_charts[index].width / 2f - _labels[index].width / 2f, 0f - ShowIt2Config.Instance.Scaling);
-                //_icons[index].isVisible = true;
-                //_labels[index].isVisible = true;
-                //}
-            }
-            catch (Exception e)
-            {
-                Debug.Log("[Show It!] ShowIt2Panel:SetChart -> Exception: " + e.Message);
-            }
-        }
-        */
-        /*private void ResetAllCharts()
-        {
-            try
-            {
-                foreach (UIRadialChart chart in _charts.Values)
-                {
-                    chart.isVisible = false;
-                }
-
-                foreach (UILabel number in _numbers.Values)
-                {
-                    number.isVisible = false;
-                }
-
-                foreach (UILabel maxVal in _maxVals.Values)
-                {
-                    maxVal.isVisible = false;
-                }
-
-                foreach (UISprite icon in _icons.Values)
-                {
-                    icon.isVisible = false;
-                }
-
-                foreach (UILabel label in _labels.Values)
-                {
-                    label.isVisible = false;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.Log("[Show It!] ShowIt2Panel:ResetAllCharts -> Exception: " + e.Message);
-            }
-        }*/
 
         public void RefreshData()
         {
@@ -534,141 +263,9 @@ namespace ShowIt2
                 case ItemClass.Zone.Office:
                     ShowOfficeProgress(buildingID, ref building);
                     break;
-                default:
-
-                    break;
             }
-            // Realistic Population button => 282x78
-            //UIButton rpButton = m_uiZonedBuildingWorldInfoPanel.component.Find<UIButton>("UIButton");
-            //UIButton b2 = m_uiZonedBuildingWorldInfoPanel.component.GetComponent<UIButton>();
         }
 
-        /*private void ShowResidentialCharts()
-        {
-            try
-            {
-                ImmaterialResourceManager.Resource[] resources = new ImmaterialResourceManager.Resource[15];
-
-                resources[0] = ImmaterialResourceManager.Resource.HealthCare;
-                resources[1] = ImmaterialResourceManager.Resource.DeathCare;
-                resources[2] = ImmaterialResourceManager.Resource.FireDepartment;
-                resources[3] = ImmaterialResourceManager.Resource.PoliceDepartment;
-                resources[4] = ImmaterialResourceManager.Resource.EducationElementary;
-                resources[5] = ImmaterialResourceManager.Resource.EducationHighSchool;
-                resources[6] = ImmaterialResourceManager.Resource.EducationUniversity;
-                resources[7] = ImmaterialResourceManager.Resource.PublicTransport;
-                resources[8] = ImmaterialResourceManager.Resource.PostService;
-                resources[9] = ImmaterialResourceManager.Resource.Entertainment;
-                resources[10] = ImmaterialResourceManager.Resource.FirewatchCoverage;
-                resources[11] = ImmaterialResourceManager.Resource.DisasterCoverage;
-                resources[12] = ImmaterialResourceManager.Resource.RadioCoverage;
-                resources[13] = ImmaterialResourceManager.Resource.NoisePollution;
-                resources[14] = ImmaterialResourceManager.Resource.Abandonment;
-
-                SetCharts(resources);
-            }
-            catch (Exception e)
-            {
-                Debug.Log("[Show It!] ShowIt2Panel:ShowResidentialCharts -> Exception: " + e.Message);
-            }
-        }*/
-
-        /*private void ShowIndustrialCharts()
-        {
-            try
-            {
-                ImmaterialResourceManager.Resource[] resources = new ImmaterialResourceManager.Resource[16];
-
-                resources[0] = ImmaterialResourceManager.Resource.HealthCare;
-                resources[1] = ImmaterialResourceManager.Resource.DeathCare;
-                resources[2] = ImmaterialResourceManager.Resource.FireDepartment;
-                resources[3] = ImmaterialResourceManager.Resource.PoliceDepartment;
-                resources[4] = ImmaterialResourceManager.Resource.EducationElementary;
-                resources[5] = ImmaterialResourceManager.Resource.EducationHighSchool;
-                resources[6] = ImmaterialResourceManager.Resource.EducationUniversity;
-                resources[7] = ImmaterialResourceManager.Resource.PublicTransport;
-                resources[8] = ImmaterialResourceManager.Resource.PostService;
-                resources[9] = ImmaterialResourceManager.Resource.Entertainment;
-                resources[10] = ImmaterialResourceManager.Resource.FirewatchCoverage;
-                resources[11] = ImmaterialResourceManager.Resource.DisasterCoverage;
-                resources[12] = ImmaterialResourceManager.Resource.RadioCoverage;
-                resources[13] = ImmaterialResourceManager.Resource.CargoTransport;
-                resources[14] = ImmaterialResourceManager.Resource.NoisePollution;
-                resources[15] = ImmaterialResourceManager.Resource.Abandonment;
-
-                SetCharts(resources);
-            }
-            catch (Exception e)
-            {
-                Debug.Log("[Show It!] ShowIt2Panel:ShowIndustrialCharts -> Exception: " + e.Message);
-            }
-        }*/
-
-        /*private void ShowCommercialCharts()
-        {
-            try
-            {
-                ImmaterialResourceManager.Resource[] resources = new ImmaterialResourceManager.Resource[17];
-
-                resources[0] = ImmaterialResourceManager.Resource.HealthCare;
-                resources[1] = ImmaterialResourceManager.Resource.DeathCare;
-                resources[2] = ImmaterialResourceManager.Resource.FireDepartment;
-                resources[3] = ImmaterialResourceManager.Resource.PoliceDepartment;
-                resources[4] = ImmaterialResourceManager.Resource.EducationElementary;
-                resources[5] = ImmaterialResourceManager.Resource.EducationHighSchool;
-                resources[6] = ImmaterialResourceManager.Resource.EducationUniversity;
-                resources[7] = ImmaterialResourceManager.Resource.PublicTransport;
-                resources[8] = ImmaterialResourceManager.Resource.PostService;
-                resources[9] = ImmaterialResourceManager.Resource.Entertainment;
-                resources[10] = ImmaterialResourceManager.Resource.FirewatchCoverage;
-                resources[11] = ImmaterialResourceManager.Resource.DisasterCoverage;
-                resources[12] = ImmaterialResourceManager.Resource.RadioCoverage;
-                resources[13] = ImmaterialResourceManager.Resource.CargoTransport;
-                resources[14] = ImmaterialResourceManager.Resource.NoisePollution;
-                resources[15] = ImmaterialResourceManager.Resource.Abandonment;
-                resources[16] = ImmaterialResourceManager.Resource.CashCollecting;
-
-                SetCharts(resources);
-            }
-            catch (Exception e)
-            {
-                Debug.Log("[Show It!] ShowIt2Panel:ShowCommercialCharts -> Exception: " + e.Message);
-            }
-        }*/
-
-        /*private void ShowOfficeCharts()
-        {
-            try
-            {
-                ImmaterialResourceManager.Resource[] resources = new ImmaterialResourceManager.Resource[15];
-
-                resources[0] = ImmaterialResourceManager.Resource.HealthCare;
-                resources[1] = ImmaterialResourceManager.Resource.DeathCare;
-                resources[2] = ImmaterialResourceManager.Resource.FireDepartment;
-                resources[3] = ImmaterialResourceManager.Resource.PoliceDepartment;
-                resources[4] = ImmaterialResourceManager.Resource.EducationElementary;
-                resources[5] = ImmaterialResourceManager.Resource.EducationHighSchool;
-                resources[6] = ImmaterialResourceManager.Resource.EducationUniversity;
-                resources[7] = ImmaterialResourceManager.Resource.PublicTransport;
-                resources[8] = ImmaterialResourceManager.Resource.PostService;
-                resources[9] = ImmaterialResourceManager.Resource.Entertainment;
-                resources[10] = ImmaterialResourceManager.Resource.FirewatchCoverage;
-                resources[11] = ImmaterialResourceManager.Resource.DisasterCoverage;
-                resources[12] = ImmaterialResourceManager.Resource.RadioCoverage;
-                resources[13] = ImmaterialResourceManager.Resource.NoisePollution;
-                resources[14] = ImmaterialResourceManager.Resource.Abandonment;
-
-                SetCharts(resources);
-
-                // Infixo new calculations
-
-
-            }
-            catch (Exception e)
-            {
-                Debug.Log("[Show It!] ShowIt2Panel:ShowOfficeCharts -> Exception: " + e.Message);
-            }
-        }*/
 
         /*private bool IsIndicatorAvailable(ImmaterialResourceManager.Resource resource)
         {
@@ -679,75 +276,6 @@ namespace ShowIt2
 
             return Singleton<InfoManager>.instance.IsInfoModeAvailable(infoMode);
 
-        }*/
-
-        /*private bool IsIndicatorPositive(ImmaterialResourceManager.Resource resource)
-        {
-            switch (resource)
-            {
-                case ImmaterialResourceManager.Resource.HealthCare:
-                    return true;
-                case ImmaterialResourceManager.Resource.FireDepartment:
-                    return true;
-                case ImmaterialResourceManager.Resource.PoliceDepartment:
-                    return true;
-                case ImmaterialResourceManager.Resource.EducationElementary:
-                    return true;
-                case ImmaterialResourceManager.Resource.EducationHighSchool:
-                    return true;
-                case ImmaterialResourceManager.Resource.EducationUniversity:
-                    return true;
-                case ImmaterialResourceManager.Resource.EducationLibrary:
-                    return true;
-                case ImmaterialResourceManager.Resource.DeathCare:
-                    return true;
-                case ImmaterialResourceManager.Resource.PublicTransport:
-                    return true;
-                case ImmaterialResourceManager.Resource.NoisePollution:
-                    return false;
-                case ImmaterialResourceManager.Resource.CrimeRate:
-                    return false;
-                case ImmaterialResourceManager.Resource.Health:
-                    return true;
-                case ImmaterialResourceManager.Resource.Wellbeing:
-                    return true;
-                case ImmaterialResourceManager.Resource.Density:
-                    return true;
-                case ImmaterialResourceManager.Resource.Entertainment:
-                    return true;
-                case ImmaterialResourceManager.Resource.LandValue:
-                    return true;
-                case ImmaterialResourceManager.Resource.Attractiveness:
-                    return true;
-                case ImmaterialResourceManager.Resource.Coverage:
-                    return true;
-                case ImmaterialResourceManager.Resource.FireHazard:
-                    return false;
-                case ImmaterialResourceManager.Resource.Abandonment:
-                    return false;
-                case ImmaterialResourceManager.Resource.CargoTransport:
-                    return true;
-                case ImmaterialResourceManager.Resource.RadioCoverage:
-                    return true;
-                case ImmaterialResourceManager.Resource.FirewatchCoverage:
-                    return true;
-                case ImmaterialResourceManager.Resource.EarthquakeCoverage:
-                    return true;
-                case ImmaterialResourceManager.Resource.DisasterCoverage:
-                    return true;
-                case ImmaterialResourceManager.Resource.TourCoverage:
-                    return true;
-                case ImmaterialResourceManager.Resource.PostService:
-                    return true;
-                case ImmaterialResourceManager.Resource.CashCollecting:
-                    return true;
-                case ImmaterialResourceManager.Resource.TaxBonus:
-                    return true;
-                case ImmaterialResourceManager.Resource.None:
-                    return false;
-                default:
-                    return false;
-            }
         }*/
 
         private static readonly Dictionary<ImmaterialResourceManager.Resource, string> LABELS = new Dictionary<ImmaterialResourceManager.Resource, string>
@@ -1023,45 +551,46 @@ namespace ShowIt2
             }
         }
 
-
-        // This is an exact copy of CommonBuildingAI.GetHomeBehaviour to get info about wealth of the customers and number of visitors
-        // This is a protected member and this data is not stored in Building object once used by the BuildingAI
-        /*protected void GetHomeBehaviour(ushort buildingID, ref Building buildingData, ref Citizen.BehaviourData behaviour, ref int aliveCount, ref int totalCount, ref int homeCount, ref int aliveHomeCount, ref int emptyHomeCount)
+        // Sets top & botton icons accordingly to actual level progress and demand
+        // The game is very buggy when both are set to 15!
+        private void RefreshProgressStatusIcons(Zone zone, int topVal, int botVal)
         {
-            CitizenManager instance = Singleton<CitizenManager>.instance;
-            uint num = buildingData.m_citizenUnits;
-            int num2 = 0;
-            while (num != 0)
+            float[] topMax = MAX_VALUES_TOPBAR[(int)zone];
+            float[] botMax = MAX_VALUES_BOTBAR[(int)zone];
+            // find top part and fraction
+            int topLev = 0;
+            float topFra = topVal / topMax[0];
+            while (topVal >= topMax[topLev] && topLev < topMax.Length - 1)
             {
-                if ((instance.m_units.m_buffer[num].m_flags & CitizenUnit.Flags.Home) != 0)
-                {
-                    int aliveCount2 = 0;
-                    int totalCount2 = 0;
-                    instance.m_units.m_buffer[num].GetCitizenHomeBehaviour(ref behaviour, ref aliveCount2, ref totalCount2);
-                    if (aliveCount2 != 0)
-                    {
-                        aliveHomeCount++;
-                        aliveCount += aliveCount2;
-                    }
-                    if (totalCount2 != 0)
-                    {
-                        totalCount += totalCount2;
-                    }
-                    else
-                    {
-                        emptyHomeCount++;
-                    }
-                    homeCount++;
-                }
-                num = instance.m_units.m_buffer[num].m_nextUnit;
-                if (++num2 > 524288)
-                {
-                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
-                    break;
-                }
+                topFra = (topVal - topMax[topLev]) / (topMax[topLev+1] - topMax[topLev]);
+                topLev++;
             }
-        }*/
-
+            // find botton part and fraction
+            int botLev = 0;
+            float botFra = botVal / botMax[0];
+            while (botVal >= botMax[botLev] && botLev < botMax.Length - 1)
+            {
+                botFra = (botVal - botMax[botLev]) / (botMax[botLev+1] - botMax[botLev]);
+                botLev++;
+            }
+            // where the progress is better?
+            if (topLev == botLev)
+            {
+                // same - check fraction
+                m_topBar.Happy = topFra > botFra;
+                m_botBar.Happy = botFra > topFra;
+            }
+            else if (topLev > botLev)
+            {
+                m_topBar.Happy = true;
+                m_botBar.Happy = false;
+            }
+            else
+            {
+                m_topBar.Happy = false;
+                m_botBar.Happy = true;
+            }
+        }
 
         // The code is based on ResidentialBuildingAI.CheckBuildingLevel
         private void ShowResidentialProgress(ushort buildingId, ref Building building)
@@ -1072,7 +601,6 @@ namespace ShowIt2
             int progressBot = building.m_levelUpProgress >> 4;  // ui-bottom is land value
 
             // education level needs to be re-calculated
-
             Citizen.BehaviourData behaviour = default;
             int aliveCount = 0;
             int totalCount = 0;
@@ -1080,10 +608,7 @@ namespace ShowIt2
             int aliveHomeCount = 0;
             int emptyHomeCount = 0;
             CommonBuildingAI buildingAI = (CommonBuildingAI)building.Info.m_buildingAI;
-            //if (ShowIt2Patcher.patched)
-                CommonBuildingAI_Patches.GetHomeBehaviour_Reverse(buildingAI, buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount, ref homeCount, ref aliveHomeCount, ref emptyHomeCount);
-            //else
-                //GetHomeBehaviour(buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount, ref homeCount, ref aliveHomeCount, ref emptyHomeCount);
+            CommonBuildingAI_Patches.GetHomeBehaviour_Reverse(buildingAI, buildingId, ref building, ref behaviour, ref aliveCount, ref totalCount, ref homeCount, ref aliveHomeCount, ref emptyHomeCount);
 
             int education = behaviour.m_educated1Count + behaviour.m_educated2Count * 2 + behaviour.m_educated3Count * 3;
             int populace = behaviour.m_teenCount + behaviour.m_youngCount * 2 + behaviour.m_adultCount * 3 + behaviour.m_seniorCount * 3;
@@ -1093,38 +618,22 @@ namespace ShowIt2
             }
 
             // land value
-            Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(ImmaterialResourceManager.Resource.LandValue, building.m_position, out var local);
-            int waterValue = ShowLandValue(buildingId, ref building);
+            Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(ImmaterialResourceManager.Resource.LandValue, building.m_position, out var landValue);
+            ShowLandValue(buildingId, ref building);
 
             // new shiny bars :)
             m_topBar.Text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
-            m_topBar.MaxValues = new float[] { 15f, 30f, 45f, 60f, 80f };
+            m_topBar.MaxValues = MAX_VALUES_TOPBAR[(int)Zone.R]; // new float[] { 15f, 30f, 45f, 60f, 80f };
             m_topBar.Value = education;
-            m_topBar.Panel.tooltip = "[Level 1]  ..14 | 15..29 | 30..44 | 45..59 | 60..  [Level 5]" + Environment.NewLine +
+            m_topBar.Panel.tooltip = $"{progressTop} [Level 1]  ..14 | 15..29 | 30..44 | 45..59 | 60..  [Level 5]" + Environment.NewLine +
                 $"Populace: Children {building.m_children} Teens {building.m_teens} Youngs {building.m_youngs} Adults {building.m_adults} Seniors {building.m_seniors}" + Environment.NewLine +
                 $"Education: Edu {building.m_education1} Well {building.m_education2} High {building.m_education3}";
-            //_progTopName.text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
-            //_progTopProgress.text = progressTop.ToString();
-            //_progTopValue.text = education.ToString();
-            //_progBotName.text = Locale.Get(LocaleID.INFO_LANDVALUE_TITLE);
             m_botBar.Text = Locale.Get(LocaleID.INFO_LANDVALUE_TITLE);
-            m_botBar.MaxValues = new float[] { 6f, 21f, 41f, 61f, 80f };
-            m_botBar.Value = local;
-            m_botBar.Panel.tooltip = "[Level 1]   ..5 |  6..20 | 21..40 | 41..60 | 61..  [Level 5]" + Environment.NewLine +
-                $"Water value: {waterValue}";
-            //_progBotProgress.text = progressBot.ToString();
-            //_progBotValue.text = local.ToString();
-            //_progBotValue.tooltip = $"Water value: {waterValue}";
+            m_botBar.MaxValues = MAX_VALUES_BOTBAR[(int)Zone.R]; // new float[] { 6f, 21f, 41f, 61f, 80f };
+            m_botBar.Value = landValue;
+            m_botBar.Panel.tooltip = $"{progressBot} [Level 1]   ..5 |  6..20 | 21..40 | 41..60 | 61..  [Level 5]";
+            RefreshProgressStatusIcons(Zone.R, education, landValue);
         }
-
-        /*private int CalculateAndShowSingleServiceValue(
-            int resourceRate, int middleRate, int maxRate, int middleEffect, int maxEffect, // params for CalculateResourceEffect
-            int divisor, int uiCtrl) // uiCtrl is a dict-key to access proper controls
-        {
-            int value = ImmaterialResourceManager.CalculateResourceEffect(resourceRate, middleRate, maxRate, middleEffect, maxEffect) / divisor;
-            int maxValue = maxEffect / divisor;
-            return value;
-        }*/
 
         private int ProcessServiceValue(
             ushort[] resources, int index, // from CheckLocalResources
@@ -1158,21 +667,9 @@ namespace ShowIt2
             return value;
         }
 
-        // This is an exact copy of IndustrialBuildingAI.CalculateServiceValue private method to get info about service coverage
+        // This is an exact logical copy of IndustrialBuildingAI.CalculateServiceValue private method to get info about service coverage
         private int CalculateServiceValueIndustrial(ushort buildingID, ref Building data)
         {
-            // UI adjustment
-            m_uiServices[ImmaterialResourceManager.Resource.CargoTransport].Panel.Show();
-            m_uiServices[ImmaterialResourceManager.Resource.EducationLibrary].Panel.Hide();
-            m_uiServices[ImmaterialResourceManager.Resource.ChildCare].Panel.Hide();
-            m_uiServices[ImmaterialResourceManager.Resource.ElderCare].Panel.Hide();
-            m_uiServices[ImmaterialResourceManager.Resource.Health].Panel.Hide();
-            m_uiServices[ImmaterialResourceManager.Resource.Wellbeing].Panel.Hide();
-            m_uiServices[                                   WaterProximity].Panel.Hide();
-            m_uiServices[ImmaterialResourceManager.Resource.FireHazard].Panel.Hide();
-            m_uiServices[ImmaterialResourceManager.Resource.CrimeRate].Panel.Hide();
-            RescaleServiceBars(70f); // max is 50&100
-
             Singleton<ImmaterialResourceManager>.instance.CheckLocalResources(data.m_position, out ushort[] resources, out var index);
             Singleton<NaturalResourceManager>.instance.CheckPollution(data.m_position, out var groundPollution);
 
@@ -1197,46 +694,6 @@ namespace ShowIt2
             value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.Abandonment, 100, 500, 50, 100, 7, true); // there is no UI overlay for that
             value -= ProcessServiceValue(resources, index, GroundPollution, 50, 255, 50, 100, 6, true, groundPollution); // special case
 
-            // original calculations
-            /*
-            int resourceRate = resources[index + 7]; // PublicTransport 7
-            int resourceRate2 = resources[index + 2]; // PoliceDepartment 3
-            int resourceRate3 = resources[index]; // HealthCare 0
-            int resourceRate4 = resources[index + 6]; // DeathCare 1
-            int resourceRate5 = resources[index + 25]; // PostService 8
-            int resourceRate6 = resources[index + 1]; // FireDepartment 2
-            int resourceRate7 = resources[index + 13]; // Entertainment 9
-            int resourceRate8 = resources[index + 3]; // EducationElementary 4
-            int resourceRate9 = resources[index + 4]; // EducationHighSchool 5
-            int resourceRate10 = resources[index + 5]; // EducationUniversity 6
-            int resourceRate11 = resources[index + 19]; // CargoTransport 11
-            int resourceRate12 = resources[index + 8]; // NoisePollution 12
-            int resourceRate13 = resources[index + 18]; // Abandonment --
-            int resourceRate14 = resources[index + 20]; // RadioCoverage --
-            int resourceRate15 = resources[index + 21]; // FirewatchCoverage 10
-            int resourceRate16 = resources[index + 23]; // DisasterCoverage --
-            int num = 0;
-            num += CalculateAndShowSingleServiceValue(resourceRate, 100, 500, 50, 100, 3, 7); // PublicTransport
-            num += CalculateAndShowSingleServiceValue(resourceRate2, 100, 500, 50, 100, 5, 3); // PoliceDepartment
-            num += CalculateAndShowSingleServiceValue(resourceRate3, 100, 500, 50, 100, 5, 0); // HealthCare
-            num += CalculateAndShowSingleServiceValue(resourceRate4, 100, 500, 50, 100, 5, 1); // DeathCare
-            num += CalculateAndShowSingleServiceValue(resourceRate5, 100, 500, 50, 100, 5, 8); // PostService
-            num += CalculateAndShowSingleServiceValue(resourceRate6, 100, 500, 50, 100, 2, 2); // FireDepartment
-            num += CalculateAndShowSingleServiceValue(resourceRate7, 100, 500, 50, 100, 8, 9); // Entertainment
-            num += CalculateAndShowSingleServiceValue(resourceRate8, 100, 500, 50, 100, 8, 4); // EducationElementary
-            num += CalculateAndShowSingleServiceValue(resourceRate9, 100, 500, 50, 100, 8, 5); // EducationHighSchool
-            num += CalculateAndShowSingleServiceValue(resourceRate10, 100, 500, 50, 100, 8, 6); // EducationUniversity
-            num += CalculateAndShowSingleServiceValue(resourceRate11, 100, 500, 50, 100, 1, 11); // CargoTransport
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate14, 50, 100, 80, 100) / 5; // RadioCoverage // I dont have this DLC
-            num += CalculateAndShowSingleServiceValue(resourceRate15, 100, 1000, 0, 100, 5, 10); // FirewatchCoverage
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate16, 50, 100, 80, 100) / 5; // DisasterCoverage // I dont have this DLC
-            num -= CalculateAndShowSingleServiceValue(resourceRate12, 100, 500, 50, 100, 7, 12); // NoisePollution
-            num -= ImmaterialResourceManager.CalculateResourceEffect(resourceRate13, 100, 500, 50, 100) / 7; // Abandonment // There is no UI overlay for that
-            num -= ImmaterialResourceManager.CalculateResourceEffect(groundPollution, 50, 255, 50, 100) / 6; // Infixo todo: missing, there is no resource effect for that
-
-            // debug check
-            Debug.Log($"ShowIt2.CalculateServiceValueIndustrial, buildingID={buildingID}, original={num}, new={value}, same? {value == num}");
-            */
             return value;
         }
 
@@ -1252,10 +709,7 @@ namespace ShowIt2
             int aliveWorkerCount = 0;
             int totalWorkerCount = 0;
             CommonBuildingAI buildingAI = (CommonBuildingAI)building.Info.m_buildingAI;
-            //if (ShowIt2Patcher.patched)
-                CommonBuildingAI_Patches.GetWorkBehaviour_Reverse(buildingAI, buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
-            //else
-                //GetWorkBehaviour(buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
+            CommonBuildingAI_Patches.GetWorkBehaviour_Reverse(buildingAI, buildingId, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
             int education = behaviour.m_educated1Count + behaviour.m_educated2Count * 2 + behaviour.m_educated3Count * 3;
             if (aliveWorkerCount != 0)
             {
@@ -1263,25 +717,29 @@ namespace ShowIt2
             }
 
             // service coverage
+            m_uiServices[ImmaterialResourceManager.Resource.CargoTransport].Panel.Show();
+            m_uiServices[ImmaterialResourceManager.Resource.EducationLibrary].Panel.Hide();
+            m_uiServices[ImmaterialResourceManager.Resource.ChildCare].Panel.Hide();
+            m_uiServices[ImmaterialResourceManager.Resource.ElderCare].Panel.Hide();
+            m_uiServices[ImmaterialResourceManager.Resource.Health].Panel.Hide();
+            m_uiServices[ImmaterialResourceManager.Resource.Wellbeing].Panel.Hide();
+            m_uiServices[WaterProximity].Panel.Hide();
+            m_uiServices[ImmaterialResourceManager.Resource.FireHazard].Panel.Hide();
+            m_uiServices[ImmaterialResourceManager.Resource.CrimeRate].Panel.Hide();
+            RescaleServiceBars(70f); // max is 50&100
             int service = CalculateServiceValueIndustrial(buildingId, ref building);
 
             // new shiny bars :)
             m_topBar.Text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
-            m_topBar.MaxValues = new float[] { 15f, 30f, 45f };
+            m_topBar.MaxValues = MAX_VALUES_TOPBAR[(int)Zone.I]; // new float[] { 15f, 30f, 45f };
             m_topBar.Value = education;
-            m_topBar.Panel.tooltip = "[Level 1]  ..14 | 15..29 | 30..  [Level 3]" + Environment.NewLine + // Infixo todo: change to slider
+            m_topBar.Panel.tooltip = $"{progressTop} [Level 1]  ..14 | 15..29 | 30..  [Level 3]" + Environment.NewLine +
                 $"Workers: {aliveWorkerCount}, Education: Edu {behaviour.m_educated1Count} Well {behaviour.m_educated2Count} High {behaviour.m_educated3Count}";
-            //_progTopName.text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
-            //_progTopProgress.text = progressTop.ToString();
-            //_progTopValue.text = education.ToString();
-            //_progBotName.text = Locale.Get(LocaleID.POLICY_SERVICES);
             m_botBar.Text = Locale.Get(LocaleID.POLICY_SERVICES);
-            m_botBar.MaxValues = new float[] { 30f, 60f, 90f };
+            m_botBar.MaxValues = MAX_VALUES_BOTBAR[(int)Zone.I]; // new float[] { 30f, 60f, 90f };
             m_botBar.Value = service;
-            m_botBar.Panel.tooltip = "[Level 1]  ..29 | 30..59 | 60..  [Level 3]"; // Infixo todo: change to slider
-            //_progBotProgress.text = progressBot.ToString();
-            //_progBotValue.text = service.ToString();
-            //_progBotValue.tooltip = "";
+            m_botBar.Panel.tooltip = $"{progressBot} [Level 1]  ..29 | 30..59 | 60..  [Level 3]";
+            RefreshProgressStatusIcons(Zone.I, education, service);
         }
 
         // The code is based on CommercialBuildingAI.CheckBuildingLevel
@@ -1308,44 +766,26 @@ namespace ShowIt2
             }
 
             // land value
-            Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(ImmaterialResourceManager.Resource.LandValue, building.m_position, out var local);
-            int waterValue = ShowLandValue(buildingId, ref building);
+            Singleton<ImmaterialResourceManager>.instance.CheckLocalResource(ImmaterialResourceManager.Resource.LandValue, building.m_position, out var landValue);
+            ShowLandValue(buildingId, ref building);
 
             // new shiny bars :)
             m_topBar.Text = "Wealth";
-            m_topBar.MaxValues = new float[] { 30f, 45f, 60f };
+            m_topBar.MaxValues = MAX_VALUES_TOPBAR[(int)Zone.C]; // new float[] { 30f, 45f, 60f };
             m_topBar.Value = wealth;
-            m_topBar.Panel.tooltip = "[Level 1]  ..29 | 30..44 | 45..  [Level 3]" + Environment.NewLine +
+            m_topBar.Panel.tooltip = $"{progressTop} [Level 1]  ..29 | 30..44 | 45..  [Level 3]" + Environment.NewLine +
                 $"Visitors: {aliveCount}, Wealth: Low {behaviour.m_wealth1Count} Medium {behaviour.m_wealth2Count} High {behaviour.m_wealth3Count}";
-            //_progTopName.text = "Wealth";
-            //_progTopProgress.text = progressTop.ToString();
-            //_progTopValue.text = wealth.ToString();
             m_botBar.Text = Locale.Get(LocaleID.INFO_LANDVALUE_TITLE);
-            m_botBar.MaxValues = new float[] { 21f, 41f, 61f };
-            m_botBar.Value = local;
-            m_botBar.Panel.tooltip = "[Level 1]  ..20 | 21..40 | 41..  [Level 3]" + Environment.NewLine +
-                $"Water value: {waterValue}";
-            //_progBotName.text = Locale.Get(LocaleID.INFO_LANDVALUE_TITLE);
-            //_progBotProgress.text = progressBot.ToString();
-            //_progBotValue.text = local.ToString();
+            m_botBar.MaxValues = MAX_VALUES_BOTBAR[(int)Zone.C]; // new float[] { 21f, 41f, 61f };
+            m_botBar.Value = landValue;
+            m_botBar.Panel.tooltip = $"{progressBot} [Level 1]  ..20 | 21..40 | 41..  [Level 3]";
+            RefreshProgressStatusIcons(Zone.C, wealth, landValue);
         }
 
-        // This is an exact copy of OfficeBuildingAI.CalculateServiceValue private method to get info about service coverage
+        // This is an exact logial copy of OfficeBuildingAI.CalculateServiceValue private method to get info about service coverage
         // Calls to CalculateResourceEffect are converted to ProcessServiceValue with exactly the same params
         private int CalculateServiceValueOffice(ushort buildingID, ref Building data)
         {
-            // UI adjustment
-            m_uiServices[ImmaterialResourceManager.Resource.CargoTransport].Panel.Hide();
-            m_uiServices[ImmaterialResourceManager.Resource.EducationLibrary].Panel.Hide();
-            m_uiServices[ImmaterialResourceManager.Resource.ChildCare].Panel.Hide();
-            m_uiServices[ImmaterialResourceManager.Resource.ElderCare].Panel.Hide();
-            m_uiServices[ImmaterialResourceManager.Resource.Health].Panel.Hide();
-            m_uiServices[ImmaterialResourceManager.Resource.Wellbeing].Panel.Hide();
-            m_uiServices[                                   WaterProximity].Panel.Hide();
-            m_uiServices[ImmaterialResourceManager.Resource.FireHazard].Panel.Hide();
-            m_uiServices[ImmaterialResourceManager.Resource.CrimeRate].Panel.Hide();
-            RescaleServiceBars(50f); // max is 33
-
             Singleton<ImmaterialResourceManager>.instance.CheckLocalResources(data.m_position, out var resources, out var index);
             Singleton<NaturalResourceManager>.instance.CheckPollution(data.m_position, out var groundPollution);
 
@@ -1369,48 +809,6 @@ namespace ShowIt2
             value -= ProcessServiceValue(resources, index, ImmaterialResourceManager.Resource.Abandonment, 100, 500, 50, 100, 3, true); // there is no UI overlay for that
             value -= ProcessServiceValue(resources, index, GroundPollution, 50, 255, 50, 100, 4, true, groundPollution); // special case
 
-            /* original
-            int resourceRate = resources[index + 7]; // PublicTransport
-            int resourceRate2 = resources[index + 2]; // PoliceDepartment
-            int resourceRate3 = resources[index]; // HealthCare
-            int resourceRate4 = resources[index + 6]; // DeathCare
-            int resourceRate5 = resources[index + 25]; // PostService
-            int resourceRate6 = resources[index + 1]; // FireDepartment
-            int resourceRate7 = resources[index + 13]; // Entertainment
-            int resourceRate8 = resources[index + 3]; // EducationElementary
-            int resourceRate9 = resources[index + 4]; // EducationHighSchool
-            int resourceRate10 = resources[index + 5]; // EducationUniversity
-            int resourceRate11 = resources[index + 8]; // NoisePollution
-            int resourceRate12 = resources[index + 18]; // Abandonment
-            int resourceRate13 = resources[index + 20]; // RadioCoverage
-            int resourceRate14 = resources[index + 21]; // FirewatchCoverage
-            int resourceRate15 = resources[index + 23]; // DisasterCoverage
-            int num = 0;
-            num += CalculateAndShowSingleServiceValue(resourceRate, 100, 500, 50, 100, 3, 7); // PublicTransport
-            num += CalculateAndShowSingleServiceValue(resourceRate2, 100, 500, 50, 100, 5, 3); // PoliceDepartment
-            num += CalculateAndShowSingleServiceValue(resourceRate3, 100, 500, 50, 100, 5, 0); // HealthCare
-            num += CalculateAndShowSingleServiceValue(resourceRate4, 100, 500, 50, 100, 5, 1); // DeathCare
-            num += CalculateAndShowSingleServiceValue(resourceRate5, 100, 500, 50, 100, 5, 8); // PostService
-            num += CalculateAndShowSingleServiceValue(resourceRate6, 100, 500, 50, 100, 5, 2); // FireDepartment
-            num += CalculateAndShowSingleServiceValue(resourceRate7, 100, 500, 50, 100, 6, 9); // Entertainment
-            num += CalculateAndShowSingleServiceValue(resourceRate8, 100, 500, 50, 100, 7, 4); // EducationElementary
-            num += CalculateAndShowSingleServiceValue(resourceRate9, 100, 500, 50, 100, 7, 5); // EducationHighSchool
-            num += CalculateAndShowSingleServiceValue(resourceRate10, 100, 500, 50, 100, 7, 6); // EducationUniversity
-            //num += ProcessServiceValue(resourceRate13, 50, 100, 80, 100, 5, 12); // RadioCoverage // I dont have this DLC
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate13, 50, 100, 80, 100) / 5;
-            num += CalculateAndShowSingleServiceValue(resourceRate14, 100, 1000, 0, 100, 5, 10); // FirewatchCoverage
-            //num += ProcessServiceValue(resourceRate15, 50, 100, 80, 100, 5, 11); // DisasterCoverage // I dont have this DLC
-            num += ImmaterialResourceManager.CalculateResourceEffect(resourceRate15, 50, 100, 80, 100) / 5;
-            // negatives
-            num -= CalculateAndShowSingleServiceValue(resourceRate11, 100, 500, 50, 100, 4, 11); // NoisePollution
-            //num -= ProcessServiceValue(resourceRate12, 100, 500, 50, 100, 3, 14); // Abandonment // There is no UI overlay for that
-            num -= ImmaterialResourceManager.CalculateResourceEffect(resourceRate12, 100, 500, 50, 100) / 3;
-            //return num - ProcessServiceValue(groundPollution, 50, 255, 50, 100, 4; // Infixo todo: missing, there is no resource effect for that
-            num -= ImmaterialResourceManager.CalculateResourceEffect(groundPollution, 50, 255, 50, 100) / 4;
-
-            // debug check
-            Debug.Log($"ShowIt2.CalculateServiceValueOffice, buildingID={buildingID}, original={num}, new={value}, same? {value == num}");
-            */
             return value;
         }
 
@@ -1426,10 +824,7 @@ namespace ShowIt2
             int aliveWorkerCount = 0;
             int totalWorkerCount = 0;
             CommonBuildingAI buildingAI = (CommonBuildingAI)building.Info.m_buildingAI;
-            //if (ShowIt2Patcher.patched)
-                CommonBuildingAI_Patches.GetWorkBehaviour_Reverse(buildingAI, buildingID, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
-            //else
-                //GetWorkBehaviour(buildingID, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
+            CommonBuildingAI_Patches.GetWorkBehaviour_Reverse(buildingAI, buildingID, ref building, ref behaviour, ref aliveWorkerCount, ref totalWorkerCount); // aliveWorkerCount is the one needed
             int education = behaviour.m_educated1Count + behaviour.m_educated2Count * 2 + behaviour.m_educated3Count * 3;
             if (aliveWorkerCount != 0)
             {
@@ -1437,33 +832,36 @@ namespace ShowIt2
             }
 
             // service coverage
+            m_uiServices[ImmaterialResourceManager.Resource.CargoTransport].Panel.Hide();
+            m_uiServices[ImmaterialResourceManager.Resource.EducationLibrary].Panel.Hide();
+            m_uiServices[ImmaterialResourceManager.Resource.ChildCare].Panel.Hide();
+            m_uiServices[ImmaterialResourceManager.Resource.ElderCare].Panel.Hide();
+            m_uiServices[ImmaterialResourceManager.Resource.Health].Panel.Hide();
+            m_uiServices[ImmaterialResourceManager.Resource.Wellbeing].Panel.Hide();
+            m_uiServices[WaterProximity].Panel.Hide();
+            m_uiServices[ImmaterialResourceManager.Resource.FireHazard].Panel.Hide();
+            m_uiServices[ImmaterialResourceManager.Resource.CrimeRate].Panel.Hide();
+            RescaleServiceBars(50f); // max is 33
             int service = CalculateServiceValueOffice(buildingID, ref building);
 
             // new shiny bars :)
             m_topBar.Text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
-            m_topBar.MaxValues = new float[] { 15f, 30f, 45f };
+            m_topBar.MaxValues = MAX_VALUES_TOPBAR[(int)Zone.O]; // new float[] { 15f, 30f, 45f };
             m_topBar.Value = education;
-            m_topBar.Panel.tooltip = "[Level 1]  ..14 | 15..29 | 30..  [Level 3]" + Environment.NewLine + // Infixo todo: change to slider
+            m_topBar.Panel.tooltip = $"{progressTop} [Level 1]  ..14 | 15..29 | 30..  [Level 3]" + Environment.NewLine + // Infixo todo: change to slider
                 $"Workers: {aliveWorkerCount}, Education: Edu {behaviour.m_educated1Count} Well {behaviour.m_educated2Count} High {behaviour.m_educated3Count}";
-            //_progTopName.text = Locale.Get(LocaleID.INFO_EDUCATION_TITLE);
-            //_progTopProgress.text = progressTop.ToString();
-            //_progTopValue.text = education.ToString();
             m_botBar.Text = Locale.Get(LocaleID.POLICY_SERVICES);
-            m_botBar.MaxValues = new float[] { 45f, 90f, 135f };
+            m_botBar.MaxValues = MAX_VALUES_BOTBAR[(int)Zone.O]; // new float[] { 45f, 90f, 135f };
             m_botBar.Value = service;
-            m_botBar.Panel.tooltip = "[Level 1]  ..44 | 45..89 | 90..  [Level 3]"; // Infixo todo: change to slider
-            //_progBotName.text = Locale.Get(LocaleID.POLICY_SERVICES);
-            //_progBotProgress.text = progressBot.ToString();
-            //_progBotValue.text = service.ToString();
-            //_progBotValue.tooltip = "";
+            m_botBar.Panel.tooltip = $"{progressBot} [Level 1]  ..44 | 45..89 | 90..  [Level 3]"; // Infixo todo: change to slider
+            RefreshProgressStatusIcons(Zone.O, education, service);
         }
 
         // Health and Wellbeing have different formulas
         // If they are between 40 and 60 then their contribution is 0, below 40 is negative and above 60 is positive
         private int ProcessHealthWellbeing(
             ushort[] resources, int index, // from CheckLocalResources
-            ImmaterialResourceManager.Resource resourceType, // resource type
-                                                             //int resourceRate, // not needed - taken from resources
+            ImmaterialResourceManager.Resource resourceType,
             int middleRate, int maxRate, int middleEffect, int maxEffect) // params for CalculateResourceEffect
         {
             int resourceRate = resources[index + (int)resourceType];
@@ -1480,7 +878,7 @@ namespace ShowIt2
             return isNeg ? -valueBelow : valueAbove;
         }
 
-        private int ShowLandValue(ushort buildingID, ref Building data)
+        private void ShowLandValue(ushort buildingID, ref Building data)
         {
             // UI adjustment
             foreach (UIServiceBar uiBar in m_uiServices.Values) // all are used
@@ -1522,13 +920,6 @@ namespace ShowIt2
             value += ProcessHealthWellbeing(resources, index, ImmaterialResourceManager.Resource.Health, 60, 100, 0, 50);
             value += ProcessHealthWellbeing(resources, index, ImmaterialResourceManager.Resource.Wellbeing, 60, 100, 0, 50);
 
-            /*
-            num15 += CalculateResourceEffect(num11, 60, 100, 0, 50); // Health = 10,
-            num15 -= CalculateResourceEffect(100 - num11, 60, 100, 0, 50);
-            num15 += CalculateResourceEffect(num12, 60, 100, 0, 50); // 	Wellbeing = 11,
-            num15 -= CalculateResourceEffect(100 - num12, 60, 100, 0, 50);
-            */
-
             value /= 10;
 
             // water proximity
@@ -1537,9 +928,8 @@ namespace ShowIt2
             // if water < 33 then proportional to 300, if > 33 then reverse proportional i.e. 0 -> 300 -> 0
             // ideal water adds +30 $$
             int waterValue = realValue - value;
-            ProcessServiceValue(resources, index, WaterProximity, 150, 300, 150, 300, 10, false, waterValue*10); // output value is ignored
+            ProcessServiceValue(resources, index, WaterProximity, 150, 300, 150, 300, 10, false, waterValue*10); // output value is not needed here
             //Debug.Log($"ShowIt2.ShowLandValue: value={value} real={realValue} water={waterValue}");
-            return waterValue;
         }
     }
 }

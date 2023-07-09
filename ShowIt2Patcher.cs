@@ -66,15 +66,6 @@ namespace ShowIt2
     public static class ZonedBuildingWorldInfoPanel_Patches
     {
         /*
-        [HarmonyPostfix, HarmonyPatch("UpdateBindings")]
-        public static void UpdateBindings_Postfix()
-        {
-            // Currently selected building.
-            ushort buildingID = WorldInfoPanel.GetCurrentInstanceID().Building;
-            Debug.Log($"{ShowIt2Patcher.HarmonyId}.UpdateBindings_Postfix: id={buildingID}");
-        }
-        */
-        /*
         [HarmonyPostfix, HarmonyPatch("Start")]
         public static void Start_Postfix(ZonedBuildingWorldInfoPanel __instance)
         {
@@ -96,4 +87,4 @@ namespace ShowIt2
         }
     }
 
-} // namespace
+}
